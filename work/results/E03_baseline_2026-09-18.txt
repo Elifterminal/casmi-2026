@@ -1,0 +1,33 @@
+split seed0_n300: 300 queries, 2,533,037 reference spectra
+loading spectra ...
+  401,806,233 peaks held as flat float32 (3.21 GB)
+  loaded in 16s
+preprocessing reference spectra ...
+  2,534,596 spectra prepped, 50s
+building inverted index ...
+  64,659 bins, 37,214,385 postings, 83s
+  25/300 queries, 98s
+  50/300 queries, 109s
+  75/300 queries, 140s
+  100/300 queries, 164s
+  125/300 queries, 176s
+  150/300 queries, 214s
+  175/300 queries, 238s
+  200/300 queries, 250s
+  225/300 queries, 262s
+  250/300 queries, 273s
+  275/300 queries, 286s
+  300/300 queries, 295s
+
+============================================================
+E03 — baseline-class pipeline, measured on our harness
+============================================================
+  Class 1: MRR 0.6644   (n=48)
+  Class 2: MRR 0.0315   (n=135)
+  Class 3: MRR 0.0705   (n=117)
+
+  weighted (16/45/39, UNVERIFIED): 0.1479
+  published baseline public LB      : 0.339
+  total runtime 295s
+
+[exited with code 0]
