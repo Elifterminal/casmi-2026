@@ -1,0 +1,41 @@
+loaded 2,539,608 rows in 0s
+
+precursor_error_ppm (label-quality signal, ships uncleaned):
+  |err| p50:     1.51 ppm
+  |err| p80:     2.77 ppm
+  |err| p90:     5.04 ppm
+  |err| p95:    17.18 ppm
+  |err| p99:  2884.42 ppm
+
+structures: 275,810, formula parsed for 275,300 (99.8%)
+candidate DB: 275,185 structures with a usable mass
+
+leak check: class 2 structures with a non-zero reference-index prior: 0 of 135 (must be 0)
+scorer vs dataset key: 394/400 agree; 6 differ, 6 of those explained by tautomer canonicalisation
+
+queries with no usable adduct/mass at the tightest window: 34
+
+==========================================================================
+E04 — mass-window candidate retrieval
+==========================================================================
+  ppm  class     n   recall  median pool  mean pool  MRR (popularity rank)
+    5      1    48    0.896            8         17                 0.3531
+    5      2   135    0.896            6         24                 0.2566
+    5      3   117    0.000            6         14                 0.0000
+
+   10      1    48    0.896           13         22                 0.3215
+   10      2   135    0.919            9         32                 0.1961
+   10      3   117    0.000            8         23                 0.0000
+
+   20      1    48    0.896           18         32                 0.2960
+   20      2   135    0.919           13         46                 0.1328
+   20      3   117    0.000           12         37                 0.0000
+
+   50      1    48    0.896           36         89                 0.2121
+   50      2   135    0.919           29        109                 0.0841
+   50      3   117    0.000           23         87                 0.0000
+
+CONTROL — class 3 recall must be 0.000 at every window (the harness deleted them):
+  ok  every window
+
+total 9s
