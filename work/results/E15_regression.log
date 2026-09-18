@@ -1,3 +1,10 @@
+loaded 9s  training 275,300  coconut 472,967 (dropped 6,754 COCONUT rows our formula parser can't read)
+[seed0_n300] pools built, fragmented 19,887 new candidates 19s
+[seed0_n300] scored 145s
+[seed1_n300] pools built, fragmented 22,341 new candidates 156s
+[seed1_n300] scored 233s
+[seed2_n300] pools built, fragmented 18,445 new candidates 243s
+[seed2_n300] scored 310s
 E15 — E10 pipeline (pure fragment) on real-database candidate pools, splits seed0_n300, seed1_n300, seed2_n300
 
 median / mean mass-pool size:

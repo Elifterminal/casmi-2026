@@ -47,6 +47,7 @@ SPLITS = os.path.expanduser("~/casmi-2026/work/splits")
 RESULTS = os.path.expanduser("~/casmi-2026/work/results")
 W = {1: 0.16, 2: 0.45, 3: 0.39}
 DBS = ("train", "coconut+truth", "union")
+E15_SPLITS = ("seed0_n300", "seed1_n300", "seed2_n300")
 
 
 def _frag(smi):
@@ -69,7 +70,9 @@ def load_structures():
     return keys, pmz, add, tr[np.isfinite(tr.m)], co[np.isfinite(co.m)], bad
 
 
-def main():
+def main(splits=E15_SPLITS, dbs=DBS, tag="E15"):
+    """E16 reuses this with NP-only splits and a plain 'coconut' DB (COCONUT minus Class 3,
+    no truth injection -- on NP-only splits the C1/C2 truths are in COCONUT natively)."""
     t0 = time.time()
     keys, pmz, add, tr, co, bad = load_structures()
     trm, trs = dict(zip(tr.k, tr.m)), dict(zip(tr.k, tr.s))
@@ -80,20 +83,22 @@ def main():
     per = []            # per-query rr under each DB, for the paired bootstrap
     frag = {}
     pool_sizes = defaultdict(list)
-    for split in ("seed0_n300", "seed1_n300", "seed2_n300"):
+    for split in splits:
         sp = json.load(open(f"{SPLITS}/split_{split}.json")); assign, qrows = sp["assign"], sp["query_rows"]
         pools = {p["k"]: p for p in pickle.load(open(f"{SPLITS}/pools_{split}.pkl", "rb"))}
         c3 = {k for k, c in assign.items() if c == 3}
         truths = {k for k, c in assign.items() if c in (1, 2) and k in trm}
         dbm = {"train": {k: m for k, m in trm.items() if k not in c3},
+               "coconut": {k: m for k, m in com.items() if k not in c3},
                "coconut+truth": {**{k: m for k, m in com.items() if k not in c3}, **{k: trm[k] for k in truths}},
                "union": {**{k: m for k, m in com.items() if k not in c3}, **{k: m for k, m in trm.items() if k not in c3}}}
         smi = {**cos_, **trs}          # training SMILES win on a shared key
+        dbm = {d: dbm[d] for d in dbs}
         idx = {d: MassIndex(np.array(list(v)), np.array(list(v.values()))) for d, v in dbm.items()}
 
         cands = {}
         for k, rows in qrows.items():
-            for d in DBS:
+            for d in dbs:
                 s = set()
                 for r in rows:          # identical to E08 step 2
                     M = neutral_mass(pmz[r], add[r])
@@ -107,7 +112,7 @@ def main():
 
         for k in qrows:
             p = pools[k]; row = {"split": split, "k": k, "cls": assign[k], "native": k in com}
-            for d in DBS:
+            for d in dbs:
                 mc = cands[(k, d)]
                 sc = {c: explain(p["allmz"], p["allit"], frag[smi[c]], p["positive"]) for c in mc}
                 for c in sorted(set(p["spec"]) - mc)[:TOPN]: sc.setdefault(c, 0.0)
@@ -118,46 +123,48 @@ def main():
                 row[d] = rr
             per.append(row)
         print(f"[{split}] scored {time.time()-t0:.0f}s", flush=True)
-    report(per, pool_sizes, t0)
+    report(per, pool_sizes, t0, splits, dbs, tag)
 
 
 def wmean(rows, d):
     return sum(W[c] * np.mean([r[d] for r in rows if r["cls"] == c]) for c in (1, 2, 3))
 
 
-def report(per, pool_sizes, t0):
-    L = ["E15 — E10 pipeline (pure fragment) on real-database candidate pools", "",
+def report(per, pool_sizes, t0, splits, dbs, tag):
+    L = [f"{tag} — E10 pipeline (pure fragment) on real-database candidate pools, splits {', '.join(splits)}", "",
          "median / mean mass-pool size:"]
     for c in (1, 2, 3):
-        L.append(f"  C{c}  " + "   ".join(f"{d} {np.median(pool_sizes[(c, d)]):.0f}/{np.mean(pool_sizes[(c, d)]):.0f}" for d in DBS))
+        L.append(f"  C{c}  " + "   ".join(f"{d} {np.median(pool_sizes[(c, d)]):.0f}/{np.mean(pool_sizes[(c, d)]):.0f}" for d in dbs))
     L += ["", f"{'split':12s} {'db':14s} {'C1':>7} {'C2':>7} {'C3':>7} {'weighted':>9}"]
     out = {}
-    for s in ("seed0_n300", "seed1_n300", "seed2_n300", "ALL"):
+    for s in (*splits, "ALL"):
         rows = per if s == "ALL" else [r for r in per if r["split"] == s]
-        for d in DBS:
+        for d in dbs:
             c = [np.mean([r[d] for r in rows if r["cls"] == k]) for k in (1, 2, 3)]
             w = wmean(rows, d); out[f"{s}/{d}"] = dict(C1=c[0], C2=c[1], C3=c[2], weighted=w)
             L.append(f"{s:12s} {d:14s} {c[0]:>7.4f} {c[1]:>7.4f} {c[2]:>7.4f} {w:>9.4f}")
     L += ["", "3-split mean weighted: " + "   ".join(
-        f"{d} {np.mean([out[f'{s}/{d}']['weighted'] for s in ('seed0_n300', 'seed1_n300', 'seed2_n300')]):.4f}" for d in DBS)]
+        f"{d} {np.mean([out[f'{s}/{d}']['weighted'] for s in splits]):.4f}" for d in dbs)]
     rng = np.random.default_rng(0)
     by = {c: [r for r in per if r["cls"] == c] for c in (1, 2, 3)}
-    for d in DBS[1:]:
-        diff = lambda idx: sum(W[c] * np.mean([by[c][i][d] - by[c][i]["train"] for i in idx[c]]) for c in by)
+    base = dbs[0]
+    for d in dbs[1:]:
+        diff = lambda idx: sum(W[c] * np.mean([by[c][i][d] - by[c][i][base] for i in idx[c]]) for c in by)
         full = diff({c: np.arange(len(by[c])) for c in by})
         boots = [diff({c: rng.integers(0, len(by[c]), len(by[c])) for c in by}) for _ in range(2000)]
         lo, hi = np.percentile(boots, [2.5, 97.5])
-        L.append(f"paired Δweighted {d} − train: {full:+.4f}  95% CI [{lo:+.4f}, {hi:+.4f}]")
+        L.append(f"paired Δweighted {d} − {base}: {full:+.4f}  95% CI [{lo:+.4f}, {hi:+.4f}]")
     L += ["", "Class 2 by whether the truth is natively in COCONUT:"]
     for nat in (True, False):
         rows = [r for r in by[2] if r["native"] == nat]
         if rows:
-            L.append(f"  native={str(nat):5s} n={len(rows):3d}  " + "   ".join(f"{d} {np.mean([r[d] for r in rows]):.4f}" for d in DBS))
+            L.append(f"  native={str(nat):5s} n={len(rows):3d}  " + "   ".join(f"{d} {np.mean([r[d] for r in rows]):.4f}" for d in dbs))
     L.append(f"\nruntime {time.time()-t0:.0f}s")
     print("\n".join(L))
-    open(f"{RESULTS}/E15_coconut_pools_2026-09-18.txt", "w").write("\n".join(L) + "\n")
-    json.dump(out, open(f"{RESULTS}/E15_coconut_pools_3seeds.json", "w"), indent=2)
-    json.dump(per, open(f"{SPLITS}/E15_perquery.json", "w"))
+    name = "E15_coconut_pools" if tag == "E15" else f"{tag}_np_pools"
+    open(f"{RESULTS}/{name}_2026-09-18.txt", "w").write("\n".join(L) + "\n")
+    json.dump(out, open(f"{RESULTS}/{name}_3seeds.json", "w"), indent=2)
+    json.dump(per, open(f"{SPLITS}/{tag}_perquery.json", "w"))
 
 
 if __name__ == "__main__":

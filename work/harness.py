@@ -36,13 +36,20 @@ NP_LIBS = {"riken", "gnps", "mona", "massbank", "msdial", "spectraverse",
 MASS_LO, MASS_HI = 157.0, 1159.0     # observed range of the real test set
 MAX_Q_SPECTRA = 16                   # test has 1-16 spectra per molecule, median 3
 CLASS_SHARES = (0.16, 0.45, 0.39)    # UNVERIFIED -- see scoring.weighted_mrr
+COCO = os.path.expanduser("~/casmi-2026/work/data/coconut/coconut_csv_lite-09-2026.csv")
+
+
+def coconut_keys():
+    """InChIKey14 of every COCONUT-2026-09 structure (E16: NP-only query sets)."""
+    co = pd.read_csv(COCO, usecols=["standard_inchi_key"], dtype=str).dropna()
+    return set(co.standard_inchi_key.str.split("-").str[0])
 
 
 def load_meta():
     return pq.read_table(DATA, columns=META).to_pandas()
 
 
-def build(df, n_query=900, seed=0):
+def build(df, n_query=900, seed=0, only=None):
     rng = np.random.default_rng(seed)
 
     # candidate query structures: NP-ish, in the test's mass range, not absurdly
@@ -55,6 +62,11 @@ def build(df, n_query=900, seed=0):
         np_hits=("_np", "sum"),
         mz=("precursor_mz", "median"))
     eligible = per[(per.np_hits >= 1) & (per.mz.between(MASS_LO, MASS_HI)) & (per.n >= 2)]
+    if only is not None:
+        # E16: "NP library" isn't the same as natural product -- GNPS carries drugs and
+        # synthetics. E15 showed those score far better than real NPs, flattering every
+        # number. Restrict queries to structures natively in COCONUT.
+        eligible = eligible[eligible.index.isin(only)]
     print(f"eligible query structures: {len(eligible):,} of {len(per):,}")
 
     keys = rng.permutation(eligible.index.values)[:n_query]
@@ -128,6 +140,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n-query", type=int, default=900)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--np-coconut", action="store_true",
+                    help="E16: query molecules only from structures natively in COCONUT")
     a = ap.parse_args()
 
     t0 = time.time()
@@ -135,7 +149,7 @@ def main():
     df = load_meta().reset_index(drop=True)
     print(f"  {len(df):,} spectra, {df['inchikey14'].nunique():,} structures")
 
-    assign, query_rows = build(df, a.n_query, a.seed)
+    assign, query_rows = build(df, a.n_query, a.seed, coconut_keys() if a.np_coconut else None)
     ref_rows, cand, queries = apply_split(df, assign, query_rows)
 
     counts = pd.Series([c for c in assign.values()]).value_counts().sort_index()
@@ -163,7 +177,7 @@ def main():
     print("  ok  no query spectrum leaked into the reference index")
 
     os.makedirs(OUT, exist_ok=True)
-    tag = f"seed{a.seed}_n{a.n_query}"
+    tag = f"{'np' if a.np_coconut else ''}seed{a.seed}_n{a.n_query}"
     with open(f"{OUT}/split_{tag}.json", "w") as fh:
         json.dump({"seed": a.seed, "n_query": a.n_query,
                    "class_shares_UNVERIFIED": CLASS_SHARES,
