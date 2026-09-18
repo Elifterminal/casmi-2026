@@ -1,0 +1,10 @@
+# The plaintext source of truth NEVER goes to the public repo — publishing it
+# would make the credential gate decorative. Lives locally only.
+manifest.json
+*.bak
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+__pycache__/
