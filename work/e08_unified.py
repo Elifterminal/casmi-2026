@@ -105,8 +105,10 @@ def main():
         return ckc[k]
     print(f"mass index {time.time()-t0:.0f}s", flush=True)
 
-    RULES = {"sum":lambda s,f:s+f, "spec_priority":lambda s,f:2*s+f, "max":lambda s,f:max(s,f)}
+    RULES = {"sum":lambda s,f:s+f, "max":lambda s,f:max(s,f)}
+    GATES = [0.4, 0.55, 0.7]     # spectral-confidence thresholds for routing
     rr = {rule:defaultdict(list) for rule in RULES}
+    for g in GATES: rr[f"gated{g}"] = defaultdict(list)
 
     for n,(k,rows) in enumerate(qrows.items(),1):
         cls = assign[k]; truth = ckey(k)
@@ -135,22 +137,33 @@ def main():
         if not allc:
             for rule in RULES: rr[rule][cls].append(0.0); 
             continue
+        best_spec = max(spec.values()) if spec else 0.0     # raw confidence, pre-norm
         smax=max(spec.values()) if spec else 1.0; fmax=max(frag.values()) if frag else 1.0
         smax=smax or 1.0; fmax=fmax or 1.0
         feats={c:(spec.get(c,0.0)/smax, frag.get(c,0.0)/fmax) for c in allc}
+        def score_list(ranked):
+            for i,c in enumerate(ranked[:TOPN],1):
+                if ckey(c)==truth: return 1.0/i
+            return 0.0
+        # DETERMINISTIC tie-break: secondary sort on the key string, so results do
+        # not depend on PYTHONHASHSEED (set-iteration order). Prior E08 carried
+        # ~+-0.01 noise from this; fixed here.
         for rule,fn in RULES.items():
-            ranked=sorted(allc, key=lambda c:-fn(*feats[c]))[:TOPN]
-            v=0.0
-            for i,c in enumerate(ranked,1):
-                if ckey(c)==truth: v=1.0/i; break
-            rr[rule][cls].append(v)
+            ranked=sorted(allc, key=lambda c:(-fn(*feats[c]), c))
+            rr[rule][cls].append(score_list(ranked))
+        for g in GATES:
+            if best_spec >= g:      # confident library hit -> spectral-led ranking
+                ranked=sorted(allc, key=lambda c:(-(feats[c][0]*2+feats[c][1]), c))
+            else:                   # no confident spectral hit -> fragment ranking
+                ranked=sorted(allc, key=lambda c:(-feats[c][1], c))
+            rr[f"gated{g}"][cls].append(score_list(ranked))
         if n%75==0: print(f"  {n}/{len(qrows)} {time.time()-t0:.0f}s", flush=True)
 
     W=(0.16,0.45,0.39)
     print("\n"+"="*64); print("E08 — unified pipeline, no class oracle"); print("="*64)
     print(f"{'merge rule':14s} {'C1':>8} {'C2':>8} {'C3':>8} {'weighted16/45/39':>18}")
     out={}
-    for rule in RULES:
+    for rule in list(RULES)+[f"gated{g}" for g in GATES]:
         c1=np.mean(rr[rule][1]); c2=np.mean(rr[rule][2]); c3=np.mean(rr[rule][3])
         w=W[0]*c1+W[1]*c2+W[2]*c3; out[rule]=dict(C1=float(c1),C2=float(c2),C3=float(c3),weighted=float(w))
         print(f"{rule:14s} {c1:>8.4f} {c2:>8.4f} {c3:>8.4f} {w:>18.4f}")
