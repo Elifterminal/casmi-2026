@@ -1,0 +1,8 @@
+{
+  "split": "seed1_n300",
+  "class2": {
+    "random": 0.32938866277555945,
+    "frag_structural": 0.6144514738994705
+  },
+  "delta_vs_random": 0.2850628111239111
+}

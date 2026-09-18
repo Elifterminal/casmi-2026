@@ -1,0 +1,23 @@
+{
+  "experiment": "E07 structural fragmentation ranker, Class 2",
+  "splits": {
+    "seed0": {
+      "random": 0.3445,
+      "frag_structural": 0.6357,
+      "delta": 0.2911
+    },
+    "seed1": {
+      "random": 0.3294,
+      "frag_structural": 0.6145,
+      "delta": 0.2851
+    },
+    "seed2": {
+      "random": 0.2981,
+      "frag_structural": 0.663,
+      "delta": 0.3649
+    }
+  },
+  "mean_frag": 0.6377333333333334,
+  "mean_random": 0.324,
+  "mean_delta": 0.31373333333333336
+}
