@@ -1,0 +1,25 @@
+fixed: class 1 queries can no longer consume every spectrum of their structure
+loading metadata ...
+  2,539,608 spectra, 275,810 structures
+eligible query structures: 47,496 of 275,810
+
+class assignment:
+  class 1:   48 queries (16.0%)
+  class 2:  135 queries (45.0%)
+  class 3:  117 queries (39.0%)
+
+reference index : 2,533,037 spectra (99.7% of train)
+candidate DB    : 275,693 structures
+query spectra   : 1,559 over 300 molecules (median 4 each)
+
+--- verifying the split does what it claims ---
+  ok  class 2/3 structures have ZERO spectra anywhere in the reference index
+  ok  class 1 structures kept their other spectra
+  ok  class 3 structures removed from the candidate database
+  ok  class 1/2 structures present in the candidate database
+  ok  no query spectrum leaked into the reference index
+
+wrote /home/lee/casmi-2026/work/splits/split_seed0_n300.json and ref_rows_seed0_n300.npy
+total 2.4s
+
+[exited with code 0]

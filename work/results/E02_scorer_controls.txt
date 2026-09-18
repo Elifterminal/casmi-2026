@@ -1,0 +1,17 @@
+competition's published example (both must be WQZGKKKJIJFFOK):
+  ok   WQZGKKKJIJFFOK   OC[C@H]1OC(O)[C@H](O)[C@@H](O)[C@@H]1O
+  ok   WQZGKKKJIJFFOK   OCC1OC(O)C(O)C(O)C1O
+
+stereochemistry must be free:
+  ok   flat guess vs stereo truth -> rr=1.0
+
+negative controls (a scorer that never fails is worthless):
+  ok   wrong molecule scores 0            got 0.0000 want 0.0000
+  ok   unparseable guess scores 0         got 0.0000 want 0.0000
+  ok   unparseable truth scores 0         got 0.0000 want 0.0000
+  ok   empty guess list scores 0          got 0.0000 want 0.0000
+  ok   rank 2 scores 0.5                  got 0.5000 want 0.5000
+  ok   rank 25 scores 0.04                got 0.0400 want 0.0400
+  ok   past 25 scores 0                   got 0.0000 want 0.0000
+
+RESULT: scorer matches the competition's stated rules

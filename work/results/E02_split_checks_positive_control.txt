@@ -1,0 +1,16 @@
+eligible query structures: 47,496 of 275,810
+clean split: PASSES
+  CAUGHT  class 2 spectra left in the reference index
+            -> class 2 structure UYHZGLKEPQGJQP still has spectra in the reference index
+  CAUGHT  class 3 structure left in the candidate DB
+            -> class 3 structure RJANATGWWPNKAL is still in the candidate database
+  CAUGHT  class 2 structure missing from the candidate DB
+            -> class 2 structure UYHZGLKEPQGJQP is missing from the candidate database
+  CAUGHT  a query spectrum left in the reference index
+            -> class 2 structure UYHZGLKEPQGJQP still has spectra in the reference index
+  CAUGHT  class 1 structure with no reference spectra left (the real bug)
+            -> class 1 structure XSEKIMYCBALMQV has NO reference spectra (should keep its others)
+
+RESULT: every split check fires
+
+[exited with code 0]
