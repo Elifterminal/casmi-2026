@@ -1,0 +1,19 @@
+loaded, 12s
+index ready, 16s
+
+============================================================
+E05 — ranking the candidate pool (Class 2 is the target)
+============================================================
+scheme                   C1       C2       C3
+popularity_only      0.3199   0.1961   0.0000
+frag_only            0.3011   0.3119   0.0000
+pop+frag             0.3155   0.1968   0.0000
+pop+frag+np          0.3326   0.2064   0.0000
+all                  0.3494   0.2520   0.0000
+RANDOM               0.3130   0.3560   0.0000
+
+  expected-random               0.3820            <- E[RR] of a uniform-random rank
+
+E04 popularity floor for C2: 0.2566 (now suspect -- see RANDOM/expected-random)
+best C2 scheme: RANDOM @ 0.3560  (delta +0.0994)
+runtime 18s
