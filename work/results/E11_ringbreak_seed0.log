@@ -1,0 +1,25 @@
+[seed0_n300] 300 queries, 7866 unique candidates
+[seed0_n300]  fragmented 1000/7866 1s
+[seed0_n300]  fragmented 2000/7866 2s
+[seed0_n300]  fragmented 3000/7866 3s
+[seed0_n300]  fragmented 4000/7866 4s
+[seed0_n300]  fragmented 5000/7866 5s
+[seed0_n300]  fragmented 6000/7866 6s
+[seed0_n300]  fragmented 7000/7866 6s
+[seed0_n300] fragmentation done 7s
+E11 ring-breaking fragmenter — split seed0_n300
+
+variant        C1       C2       C3   weighted
+V0         0.4861   0.5867   0.0344     0.3552
+V1         0.4861   0.5867   0.0344     0.3552
+V1x        0.5060   0.6051   0.0339     0.3665
+V2         0.5133   0.5882   0.0388     0.3619
+V3         0.5253   0.6278   0.0454     0.3842
+V4         0.5248   0.6101   0.0598     0.3819
+V5         0.5807   0.6478   0.0468     0.4027
+V6         0.5328   0.6143   0.0482     0.3805
+V7         0.5386   0.6188   0.0414     0.3808
+V8         0.5704   0.6528   0.0475     0.4035
+
+queries where V1 per-candidate scores differ from V0: 0
+runtime 78s
