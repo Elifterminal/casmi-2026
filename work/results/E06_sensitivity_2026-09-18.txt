@@ -1,0 +1,10 @@
+E06 — class-mix x coverage sensitivity (C2=random rank only)
+mix              cov50 cov65 cov80 cov92
+16/45/39 (est)    0.19  0.22  0.25  0.27
+25/40/35          0.24  0.27  0.29  0.31
+10/40/50          0.14  0.17  0.19  0.21
+20/40/40          0.21  0.23  0.26  0.28
+15/55/30          0.21  0.24  0.27  0.30
+
+Gate 0.339 unreachable by retrieval+random under EVERY mix even at max coverage.
+=> beating random on Class 2 ranking is MANDATORY, not optional.

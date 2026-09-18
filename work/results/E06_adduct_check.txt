@@ -1,0 +1,9 @@
+test set provides adduct: True | 7 distinct, all mapped: True
+  [M+H]+           959
+  [M-H]-           193
+  [M+CH2O2-H]-     31
+  [M+Na]+          22
+  [M+NH4]+         4
+  [M+Cl]-          2
+  [M+K]+           2
+=> adduct is KNOWN in the test set; E04's 0.92 does not assume adduct-ID.
