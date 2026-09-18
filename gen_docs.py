@@ -17,6 +17,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "docs", "index.html")
 CRED_SITE = "casmi-2026 living page"
 PBKDF2_ITERS = 310_000
+WINDOW = 3  # Lee's Rules: how many messages are inside the window
 
 b64 = lambda x: base64.b64encode(x).decode()
 
@@ -85,6 +86,28 @@ ol,ul{padding-left:22px}li{margin:6px 0}
  border-radius:0 10px 10px 0;padding:16px 19px;margin:16px 0}
 .phase .pn{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700}
 footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--mut);font-size:12.5px}
+.rules{background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:16px 19px;margin:16px 0}
+.rules h3{margin-top:0}
+.rules code{font-size:12.2px}
+.msg{border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin:12px 0;background:var(--panel)}
+.msg .hdr{font-size:11.5px;color:var(--mut);margin-bottom:7px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.msg .who{font-weight:700;color:var(--fg);text-transform:uppercase;letter-spacing:.05em}
+.msg .arr{color:var(--mut)}
+.msg .b{margin:0 0 10px}
+.msg .sl{font-size:12.8px;color:var(--mut);border-top:1px dashed var(--line);padding-top:7px;margin-top:8px}
+.msg .sl b{color:var(--fg);font-size:11.5px;letter-spacing:.05em}
+.msg.elif{border-left:4px solid var(--accent)}
+.msg.seda{border-left:4px solid var(--ok)}
+.msg.gpt{border-left:4px solid var(--warn)}
+.msg.lee{border-left:4px solid var(--mut)}
+.msg .back{font-size:12px;color:var(--warn);margin-top:6px}
+.winmark{display:flex;align-items:center;gap:10px;margin:22px 0 6px;color:var(--mut);font-size:11.5px;
+ letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.winmark:before,.winmark:after{content:"";flex:1;height:1px;background:var(--line)}
+details.older{margin-top:14px}
+details.older summary{cursor:pointer;color:var(--mut);font-size:13px;padding:8px 0}
+details.older summary:hover{color:var(--fg)}
+.empty{color:var(--mut);font-style:italic;padding:18px 0}
 """
 
 LOGIN_CSS = r"""
@@ -377,6 +400,11 @@ def build_inner(m):
         p.append('</div>')
     p.append('</div>')
 
+    # ---------------- chat ----------------
+    p.append(pnl('chat'))
+    p.append(build_chat(m, None))
+    p.append('</div>')
+
     # ---------------- risks ----------------
     p.append(pnl('risks'))
     p.append('<h2>What worries me</h2>')
@@ -418,6 +446,81 @@ def build_inner(m):
              '</footer>')
     p.append('</div>')
     p.append(f'<script>{JS_TABS}</script>')
+    return "".join(p)
+
+
+def load_thread():
+    p = os.path.join(ROOT, "chat", "thread.jsonl")
+    if not os.path.exists(p):
+        return []
+    with open(p) as fh:
+        return [json.loads(l) for l in fh if l.strip()]
+
+
+def render_msg(msg):
+    who = esc(msg["from"])
+    o = [f'<div class="msg {who}">']
+    o.append(f'<div class="hdr">{esc(msg["ts"])} &nbsp; <span class="who">{who}</span> '
+             f'<span class="arr">&rarr;</span> <span class="who">{esc(msg["to"])}</span></div>')
+    o.append(f'<p class="b">{esc(msg["body"])}</p>')
+    if msg.get("back"):
+        ts, _, why = msg["back"].partition("|")
+        o.append(f'<div class="back">&#8617; read back to {esc(ts)} &mdash; {esc(why)}</div>')
+    o.append(f'<div class="sl"><b>STATE</b> &nbsp;{esc(msg["state"])}</div>')
+    o.append(f'<div class="sl"><b>ASK</b> &nbsp;&nbsp;&nbsp;{esc(msg["ask"])}</div>')
+    o.append('</div>')
+    return "".join(o)
+
+
+def build_chat(m, W):
+    thread = load_thread()
+    p = [f'<h2>Agent channel</h2>']
+    p.append('<p>Working channel for <b>Elif</b>, <b>Seda</b> and <b>GPT</b>. The record lives in '
+             '<code>chat/thread.jsonl</code> in the repo; this is the readable view of it.</p>')
+
+    p.append('<div class="rules"><h3>Lee\'s Rules &mdash; read this before you post</h3>')
+    p.append('<p><b>Read the last 3 messages. Nothing older.</b> That is the default and it covers '
+             'almost everything. If the last 3 genuinely are not enough, read further &mdash; but say so, '
+             'with a <code>back</code> field giving the timestamp you read to and why. Declaring it is '
+             'not a formality: if it starts happening often, the window is not working and the rule '
+             'needs changing rather than quietly ignoring.</p>')
+    p.append('<p><b>Every message carries four things.</b> A UTC timestamp to the second. The '
+             '<code>body</code>, which leads with the decision or the ask &mdash; no greeting, no sign-off, '
+             'no repeating back what the other agent just said, one topic, under about 120 words. '
+             'A one-line <code>STATE</code> saying where the work stands right now. And an '
+             '<code>ASK</code> saying what you need from the recipient, or <code>NONE</code>.</p>')
+    p.append('<div class="read ok"><b>Why STATE and ASK are not optional.</b> They are what makes a '
+             'three-message window safe instead of lossy. Because every message carries its own '
+             'current state and its own explicit ask, someone who has read nothing else can still '
+             'act correctly. Drop them and "only read 3" quietly starts destroying information &mdash; '
+             'a rule that looks efficient while making everyone dumber. Keep them and the window '
+             'costs almost nothing.</div>')
+    p.append('<p><b>Efficient, not terse.</b> Efficient means no wasted tokens. It does not mean '
+             'cryptic. A message the recipient has to ask about cost more than it saved. Write the '
+             'way you would to a competent colleague who is busy: plain words, specifics over '
+             'adjectives, numbers where numbers exist.</p>')
+    p.append('<p class="sub">Post with <code>python3 say.py --from &lt;handle&gt; --to &lt;handle&gt; '
+             '--body "..." --state "..." --ask "..."</code>, then re-render. Full spec in '
+             '<code>chat/PROTOCOL.md</code>; machine-readable in <code>chat/protocol.json</code>.</p>')
+    p.append('</div>')
+
+    if not thread:
+        p.append('<div class="empty">No messages yet.</div>')
+        return "".join(p)
+
+    newest = list(reversed(thread))
+    window, older = newest[:WINDOW], newest[WINDOW:]
+    p.append(f'<div class="winmark">the window &mdash; last {len(window)}</div>')
+    for msg in window:
+        p.append(render_msg(msg))
+    if older:
+        p.append(f'<details class="older"><summary>{len(older)} older message'
+                 f'{"s" if len(older) != 1 else ""} &mdash; outside the window. '
+                 f'Open only if the three above genuinely are not enough, and declare it if you '
+                 f'act on anything in here.</summary>')
+        for msg in older:
+            p.append(render_msg(msg))
+        p.append('</details>')
     return "".join(p)
 
 

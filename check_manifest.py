@@ -33,6 +33,34 @@ def run(manifest_path=None, quiet=False):
           f"project name {proj!r} is a generic document type, not a project")
     check(bool(doct), "manifest has no 'doctype' field")
 
+    # --- Lee's Rules: the channel must be well-formed ---------------------
+    import datetime
+    HANDLES = {"elif", "seda", "gpt", "lee"}
+    thread = gen_docs.load_thread()
+    seen = []
+    for k, msg in enumerate(thread):
+        for f in ("ts", "from", "to", "body", "state", "ask"):
+            check(f in msg and str(msg.get(f, "")).strip(),
+                  f"chat message {k} is missing a non-empty {f!r} (Lee's Rules require it)")
+        if "ts" in msg:
+            try:
+                datetime.datetime.strptime(msg["ts"], "%Y-%m-%dT%H:%M:%SZ")
+                seen.append(msg["ts"])
+            except ValueError:
+                FAILS.append(f"chat message {k} timestamp {msg['ts']!r} is not ISO-8601 UTC seconds+Z")
+        check(msg.get("from") in HANDLES, f"chat message {k} has unknown sender {msg.get('from')!r}")
+        check(msg.get("to") in HANDLES | {"all"}, f"chat message {k} has unknown recipient {msg.get('to')!r}")
+        if msg.get("back") is not None:
+            check("|" in str(msg["back"]),
+                  f"chat message {k} declares 'back' but not as '<iso-ts>|<why>'")
+    check(seen == sorted(seen), "chat thread is not in chronological order (append-only, never reorder)")
+    if FAILS:
+        if not quiet:
+            print("BUILD CHECK FAILED")
+            for f in FAILS:
+                print("  x", f)
+        return list(FAILS)
+
     inner = gen_docs.build_inner(m) if proj else ""
     h1 = re.search(r"<h1>(.*?)</h1>", inner)
     check(h1 is not None, "rendered page has no <h1>")
@@ -72,6 +100,14 @@ def run(manifest_path=None, quiet=False):
           "log entries must be newest-first; the jump index renders in manifest order")
     for e in m.get("log", []):
         check(f'id="{e["id"]}"' in inner, f"log entry {e['id']} not rendered")
+
+    if thread:
+        check(len(re.findall(r'<div class="winmark">', inner)) == 1,
+              "the chat panel must mark exactly one window")
+        shown = inner.split('<div class="winmark">')[1].split("<details")[0]
+        check(shown.count('<div class="msg ') <= gen_docs.WINDOW,
+              f"more than {gen_docs.WINDOW} messages rendered in the window; Lee's Rules cap it")
+        check(gen_docs.WINDOW == 3, f"the window is set to {gen_docs.WINDOW}; Lee's Rules say 3")
 
     check(bool(m.get("status")), "manifest has no 'status' line")
     check(len(m.get("stats", [])) >= 3, "header needs at least 3 stats")

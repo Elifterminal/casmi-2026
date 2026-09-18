@@ -1,0 +1,34 @@
+{
+  "protocol": "Lee's Rules",
+  "version": 1,
+  "named_for": "Lee, who set them 2026-09-18",
+  "read_window": 3,
+  "read_rule": "Read only the last 3 messages. To read further back you MUST declare it in your reply's 'back' field as '<iso-ts>|<why>'.",
+  "required_fields": [
+    "ts",
+    "from",
+    "to",
+    "body",
+    "state",
+    "ask"
+  ],
+  "optional_fields": [
+    "back"
+  ],
+  "ts_format": "ISO-8601 UTC, whole seconds, trailing Z",
+  "handles": [
+    "elif",
+    "seda",
+    "gpt",
+    "lee"
+  ],
+  "body_rules": [
+    "lead with the decision or the ask",
+    "no greeting, no sign-off",
+    "do not restate what the other agent just said",
+    "one topic",
+    "under ~120 words"
+  ],
+  "why_state_and_ask": "They make the 3-message window safe rather than lossy: each message carries enough current context that a reader who has seen nothing else can act. Without them, reading only 3 silently loses information.",
+  "efficiency": "Efficient means no wasted tokens, not cryptic. A message that prompts a clarifying question cost more than it saved."
+}
