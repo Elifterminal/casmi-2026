@@ -1,0 +1,18 @@
+loaded 12s
+spectral index 89s
+mass index 92s
+  75/300 142s
+  150/300 203s
+  225/300 238s
+  300/300 265s
+
+================================================================
+E08 — unified pipeline, no class oracle
+================================================================
+merge rule           C1       C2       C3   weighted16/45/39
+sum              0.7847   0.3849   0.0855             0.3321
+spec_priority    0.7601   0.0771   0.0897             0.1913
+max              0.7052   0.4300   0.0548             0.3277
+
+best rule: sum weighted 0.3321  (gate 0.339, on TRAINING-db coverage)
+runtime 265s
