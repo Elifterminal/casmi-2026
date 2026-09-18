@@ -1,0 +1,62 @@
+
+rows: 2,539,608
+unique structures (inchikey14): 275,810
+
+--- null rates on the fields the harness needs ---
+  inchikey14                     0 null  ( 0.00%)
+  inchikey                       0 null  ( 0.00%)
+  normalized_smiles              0 null  ( 0.00%)
+  molecular_formula              0 null  ( 0.00%)
+  ingest_lib                     0 null  ( 0.00%)
+  adduct                         0 null  ( 0.00%)
+  precursor_mz                   0 null  ( 0.00%)
+  precursor_error_ppm        4,286 null  ( 0.17%)
+
+--- ingest_lib distribution (vs the documented table) ---
+                    spectra  structures
+ingest_lib                             
+enveda-180          1153785      182941
+pluskal_ms2          527581       46821
+riken                347171       15892
+gnps                 220849       45750
+massbank             101727        9180
+mona                  92416       11681
+spectraverse          50933        9631
+msdial                40765        9127
+drug_plus              2545        2539
+enveda-np-examples     1184         250
+masaryk                 652         416
+
+========================================================================
+CLAIM A — do enveda-np-examples structures also live in other libraries?
+========================================================================
+
+structures in enveda-np-examples: 250
+of those, ALSO present under another ingest_lib: 250 (100.0%)
+unique to enveda-np-examples: 0
+
+which libraries the leaked structures turn up in:
+ingest_lib
+riken          246
+gnps           233
+mona           231
+msdial         227
+pluskal_ms2    224
+massbank       208
+drug_plus      145
+masaryk         53
+
+spectra available elsewhere for those structures: 55,599
+  median per structure: 168   max: 1464
+
+VERDICT ON CLAIM A: CONFIRMED — 100.0% leak. Holding out by ingest_lib is useless.
+
+========================================================================
+How much do libraries overlap in general? (bears on holdout design)
+  structures in exactly 1 library : 247,697 (89.8%)
+  structures in 2+ libraries      : 28,113 (10.2%)
+  max libraries for one structure : 9
+
+=> a holdout must remove a structure by inchikey14 across ALL libraries at once.
+
+[exited with code 0]
