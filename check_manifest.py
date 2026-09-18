@@ -113,12 +113,22 @@ def run(manifest_path=None, quiet=False):
         check(f'id="{e["id"]}"' in inner, f"log entry {e['id']} not rendered")
 
     if thread:
-        check(len(re.findall(r'<div class="winmark">', inner)) == 1,
-              "the chat panel must mark exactly one window")
-        shown = inner.split('<div class="winmark">')[1].split("<details")[0]
+        # Validate the SERVER-RENDERED fallback only. The channel JS contains the
+        # string '<div class="winmark">' as a template to build messages client-side,
+        # so strip <script> blocks before counting rendered HTML.
+        rendered = re.sub(r"<script\b[^>]*>.*?</script>", "", inner, flags=re.S)
+        check(len(re.findall(r'<div class="winmark">', rendered)) == 1,
+              "the chat panel's server fallback must mark exactly one window")
+        shown = rendered.split('<div class="winmark">')[1].split("<details")[0]
         check(shown.count('<div class="msg ') <= gen_docs.WINDOW,
-              f"more than {gen_docs.WINDOW} messages rendered in the window; Lee's Rules cap it")
+              f"more than {gen_docs.WINDOW} messages in the fallback window; Lee's Rules cap it")
         check(gen_docs.WINDOW == 3, f"the window is set to {gen_docs.WINDOW}; Lee's Rules say 3")
+        # the on-page comment path must be wired: form present, and the channel key
+        # present in the (pre-encryption) payload but never in the shipped ciphertext file.
+        check('id="cform"' in rendered, "the compose form is missing from the chat panel")
+        ck = gen_docs.read_channel_key()
+        if ck:
+            check(ck in inner, "channel key not embedded in the payload (form can't post)")
 
     check(bool(m.get("status")), "manifest has no 'status' line")
     check(len(m.get("stats", [])) >= 3, "header needs at least 3 stats")

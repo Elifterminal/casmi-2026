@@ -16,6 +16,11 @@ import figures
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, "docs", "index.html")
 CRED_SITE = "casmi-2026 living page"
+WORKER_URL = "https://casmi-comments.elifterminal.workers.dev/comments"
+
+def read_channel_key():
+    p = os.path.join(ROOT, ".channel_key")
+    return open(p).read().strip() if os.path.exists(p) else ""
 PBKDF2_ITERS = 310_000
 WINDOW = 3  # Lee's Rules: how many messages are inside the window
 
@@ -93,6 +98,20 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:v
  background:var(--code);border-radius:7px;padding:10px 13px;margin:10px 0;
  color:var(--accent);font-weight:600;overflow-x:auto;white-space:nowrap}
 .stampdemo span{color:var(--mut);font-weight:400}
+.compose{background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:16px 18px;margin:16px 0}
+.compose h3{margin-top:0}
+.crow{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0}
+.crow label{font-size:12px;color:var(--mut);font-weight:600;display:flex;align-items:center;gap:6px}
+.compose select,.compose input,.compose textarea{font:inherit;font-size:14px;padding:8px 10px;
+ border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--fg);width:100%}
+.compose textarea{resize:vertical;min-height:60px}
+.compose .fld{margin:8px 0}
+.compose button{margin-top:10px;padding:10px 16px;border:0;border-radius:8px;background:var(--accent);
+ color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.compose button:disabled{opacity:.6;cursor:default}
+.cerr{color:var(--warn);font-size:13px;min-height:18px;margin-top:8px}
+.viatag{display:inline-block;font-size:10px;letter-spacing:.04em;text-transform:uppercase;
+ background:var(--code);color:var(--mut);border-radius:10px;padding:1px 7px;margin-left:6px;font-weight:600}
 .msg{border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin:12px 0;background:var(--panel)}
 .msg .hdr{font-size:11.5px;color:var(--mut);margin-bottom:7px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .msg .who{font-weight:700;color:var(--fg);text-transform:uppercase;letter-spacing:.05em}
@@ -187,6 +206,70 @@ form.addEventListener('submit',function(e){
 
 def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+JS_CHANNEL = r"""
+(function(){
+  var URL_="__URL__", KEY="__KEY__";
+  function esc(s){var d=document.createElement('div');d.textContent=(s==null?'':String(s));return d.innerHTML;}
+  function renderMsg(m){
+    var back="";
+    if(m.back){var pipe=m.back.indexOf('|');
+      back='<div class="back">&#8617; read back to '+esc(m.back.slice(0,pipe))+' &mdash; '+esc(m.back.slice(pipe+1))+'</div>';}
+    var via=(m.via==='page')?' <span class="viatag">via page</span>':'';
+    return '<div class="msg '+esc(m.from)+'">'
+      +'<div class="hdr">'+esc(m.ts)+' &nbsp; <span class="who">'+esc(m.from)+'</span> '
+      +'<span class="arr">&rarr;</span> <span class="who">'+esc(m.to)+'</span>'+via+'</div>'
+      +'<p class="b">'+esc(m.body)+'</p>'+back
+      +'<div class="sl"><b>STATE</b> &nbsp;'+esc(m.state||'(none given)')+'</div>'
+      +'<div class="sl"><b>ASK</b> &nbsp;&nbsp;&nbsp;'+esc(m.ask||'NONE')+'</div></div>';
+  }
+  function render(all){
+    var el=document.getElementById('channel'); if(!el) return;
+    all.sort(function(a,b){return a.ts<b.ts?1:(a.ts>b.ts?-1:0);});
+    if(!all.length){el.innerHTML='<div class="empty">No messages yet.</div>';return;}
+    var win=all.slice(0,3), older=all.slice(3), h='<div class="winmark">the window &mdash; last '+win.length+'</div>';
+    win.forEach(function(m){h+=renderMsg(m);});
+    if(older.length){
+      h+='<details class="older"><summary>'+older.length+' older message'+(older.length!==1?'s':'')
+        +' &mdash; outside the window. Open only if the three above genuinely are not enough, '
+        +'and declare it if you act on anything in here.</summary>';
+      older.forEach(function(m){h+=renderMsg(m);});
+      h+='</details>';
+    }
+    el.innerHTML=h;
+  }
+  function load(){
+    var baked=(window.BAKED_THREAD||[]).map(function(m){if(!m.via)m.via='repo';return m;});
+    fetch(URL_,{method:'GET'}).then(function(r){return r.json();}).then(function(live){
+      render(baked.concat(live));
+    }).catch(function(){ render(baked); });
+  }
+  var form=document.getElementById('cform');
+  if(form){form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var btn=document.getElementById('csend'), err=document.getElementById('cerr');
+    err.textContent=''; btn.disabled=true; btn.textContent='Posting…';
+    var payload={from:document.getElementById('cfrom').value,
+      to:document.getElementById('cto').value,
+      body:document.getElementById('cbody').value,
+      state:document.getElementById('cstate').value,
+      ask:document.getElementById('cask').value};
+    fetch(URL_,{method:'POST',headers:{'Content-Type':'application/json','X-Channel-Key':KEY},
+      body:JSON.stringify(payload)})
+      .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+      .then(function(res){
+        btn.disabled=false; btn.textContent='Post comment';
+        if(!res.ok){err.textContent=(res.j&&res.j.error)||'post failed'; return;}
+        document.getElementById('cbody').value='';
+        document.getElementById('cstate').value='';
+        document.getElementById('cask').value='';
+        load();
+      }).catch(function(){btn.disabled=false; btn.textContent='Post comment'; err.textContent='network error';});
+  });}
+  load();
+})();
+"""
 
 
 def build_inner(m):
@@ -450,6 +533,9 @@ def build_inner(m):
              '</footer>')
     p.append('</div>')
     p.append(f'<script>{JS_TABS}</script>')
+    ck = read_channel_key()
+    chan_js = JS_CHANNEL.replace("__URL__", WORKER_URL).replace("__KEY__", ck)
+    p.append(f'<script>{chan_js}</script>')
     return "".join(p)
 
 
@@ -511,28 +597,62 @@ def build_chat(m, W):
              'cryptic. A message the recipient has to ask about cost more than it saved. Write the '
              'way you would to a competent colleague who is busy: plain words, specifics over '
              'adjectives, numbers where numbers exist.</p>')
-    p.append('<p class="sub">Post with <code>python3 say.py --from &lt;handle&gt; --to &lt;handle&gt; '
-             '--body "..." --state "..." --ask "..."</code>, then re-render. Full spec in '
-             '<code>chat/PROTOCOL.md</code>; machine-readable in <code>chat/protocol.json</code>.</p>')
+    p.append('<p><b>Two ways in.</b> I (Elif) post from the machine with '
+             '<code>say.py</code>, which commits to <code>chat/thread.jsonl</code> in the repo. '
+             '<b>Seda and ChatGPT post with the form below</b> &mdash; no repo access needed. Both '
+             'streams are merged into one timeline here. For a form post the server sets the '
+             'timestamp and writes the Rule&nbsp;1 stamp itself, so those cannot be forged or '
+             'malformed. (ChatGPT has no browser here, so Lee relays its words by posting with '
+             '<i>From: gpt</i>.)</p>')
     p.append('</div>')
 
-    if not thread:
-        p.append('<div class="empty">No messages yet.</div>')
-        return "".join(p)
+    # --- compose form: posts to the Cloudflare worker (see JS_CHANNEL) -----
+    p.append('<div class="compose"><h3>Leave a comment</h3>'
+             '<p class="sub">Posts to the shared channel. Lead with the decision or the ask; '
+             'one topic; STATE and ASK are what let a 3-message reader act.</p>'
+             '<div class="crow">'
+             '<label>From <select id="cfrom"><option>seda</option><option>gpt</option>'
+             '<option>lee</option></select></label>'
+             '<label>To <select id="cto"><option>elif</option><option>all</option>'
+             '<option>seda</option><option>gpt</option><option>lee</option></select></label>'
+             '</div>'
+             '<form id="cform">'
+             '<div class="fld"><textarea id="cbody" rows="3" required '
+             'placeholder="Your comment. One topic, under ~120 words."></textarea></div>'
+             '<div class="fld"><input id="cstate" '
+             'placeholder="STATE — where the work stands right now (one line)"></div>'
+             '<div class="fld"><input id="cask" '
+             'placeholder="ASK — what you need from the recipient, or NONE"></div>'
+             '<button id="csend" type="submit">Post comment</button>'
+             '<div id="cerr" class="cerr" role="alert"></div>'
+             '</form></div>')
 
+    # --- the merged timeline: JS fills #channel from baked repo thread + live
+    #     worker comments. Server-side we pre-render the repo thread as a no-JS
+    #     fallback, so the record is visible even if the worker is unreachable. ---
     newest = list(reversed(thread))
-    window, older = newest[:WINDOW], newest[WINDOW:]
-    p.append(f'<div class="winmark">the window &mdash; last {len(window)}</div>')
-    for msg in window:
-        p.append(render_msg(msg))
-    if older:
-        p.append(f'<details class="older"><summary>{len(older)} older message'
-                 f'{"s" if len(older) != 1 else ""} &mdash; outside the window. '
-                 f'Open only if the three above genuinely are not enough, and declare it if you '
-                 f'act on anything in here.</summary>')
-        for msg in older:
-            p.append(render_msg(msg))
-        p.append('</details>')
+    fb = []
+    if not newest:
+        fb.append('<div class="empty">No messages yet.</div>')
+    else:
+        window, older = newest[:WINDOW], newest[WINDOW:]
+        fb.append(f'<div class="winmark">the window &mdash; last {len(window)}</div>')
+        for msg in window:
+            fb.append(render_msg(msg))
+        if older:
+            fb.append(f'<details class="older"><summary>{len(older)} older message'
+                      f'{"s" if len(older) != 1 else ""} &mdash; outside the window.</summary>')
+            for msg in older:
+                fb.append(render_msg(msg))
+            fb.append('</details>')
+    p.append('<div id="channel">' + "".join(fb) + '</div>')
+
+    # baked repo thread as JS data for the client-side merge
+    baked = [{"ts": x["ts"], "from": x["from"], "to": x["to"], "body": x["body"],
+              "state": x.get("state", ""), "ask": x.get("ask", ""),
+              "back": x.get("back"), "via": "repo"} for x in thread]
+    p.append('<script>window.BAKED_THREAD=' +
+             json.dumps(baked, separators=(",", ":")) + ';</script>')
     return "".join(p)
 
 

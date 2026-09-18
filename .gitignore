@@ -12,3 +12,6 @@ __pycache__/
 # competition data — large, and redistribution is forbidden by the rules
 work/data/
 work/splits/
+
+.channel_key
+worker/wiring.json
