@@ -1,0 +1,23 @@
+E12 Class 3 analog diagnostic — 351 C3 queries over 3 splits, top-5 spectral hits
+
+Tanimoto(truth, top-1 hit):        median 0.260   mean 0.371
+Tanimoto(truth, best of top-5):   median 0.452   mean 0.482
+  share with best >= 0.8: 18.5%   >= 0.6: 37.0%   < 0.4: 46.7%
+
+mass gap of top-1 hit is a common edit: 31.9%
+any top-5 hit's gap is a common edit: 49.0%
+  ...AND that hit has Tanimoto >= 0.6:  24.2%   <- the reachable set
+
+top-1 edit breakdown:
+  (none)                    239  68.1%
+  isomer (0)                 78  22.2%
+  CH2                         9  2.6%
+  C2H4                        5  1.4%
+  H2                          5  1.4%
+  H2O                         4  1.1%
+  O                           4  1.1%
+  C2H2O (acetyl)              2  0.6%
+  C6H10O5 (hexose)            2  0.6%
+  NH                          1  0.3%
+  SO3                         1  0.3%
+  C6H10O4 (deoxyhexose)       1  0.3%

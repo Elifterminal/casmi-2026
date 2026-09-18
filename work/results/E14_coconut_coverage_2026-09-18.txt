@@ -1,0 +1,16 @@
+COCONUT 2026-09 lite: 738,827 rows, 479,721 unique InChIKey14
+
+ALL training structures: 26,140 / 275,810 = 9.48%
+
+library                             structures  in COCONUT    share
+drug_plus                                2,539       1,966   77.43%
+enveda-180                             182,941          51    0.03%
+enveda-np-examples                         250         249   99.60%
+gnps                                    45,750      16,939   37.03%
+masaryk                                    416         353   84.86%
+massbank                                 9,180       5,801   63.19%
+mona                                    11,681       9,457   80.96%
+msdial                                   9,127       7,328   80.29%
+pluskal_ms2                             46,821       8,154   17.42%
+riken                                   15,892      12,559   79.03%
+spectraverse                             9,631       2,092   21.72%

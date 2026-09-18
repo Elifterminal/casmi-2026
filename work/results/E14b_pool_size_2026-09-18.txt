@@ -1,0 +1,10 @@
+unique structures: training 275,300  coconut 472,967  union 722,506
+(pool = structures within 10 ppm of the TRUE structure's mass; truth counted when present)
+
+class  db         median pool     mean      p90
+C1     training            12     25.3       75
+C1     coconut             20     50.4      134
+C1     union               36     71.7      187
+C2     training            11     31.7       79
+C2     coconut             19     41.0      106
+C2     union               39     69.5      186

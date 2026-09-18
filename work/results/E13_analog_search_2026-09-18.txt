@@ -1,0 +1,10 @@
+E13 Class 3 relative-search — 351 C3 queries, 3 splits
+
+method          medTan@5   Tan>=.6@5     reach@5   medTan@25  Tan>=.6@25    reach@25
+A_cosine           0.452       0.370       0.242       0.557       0.470       0.350
+B_modcos           0.569       0.484       0.313       0.622       0.544       0.413
+C_nlcos            0.518       0.425       0.336       0.603       0.513       0.387
+D_editfirst        0.250       0.242       0.236       0.375       0.353       0.348
+U_union            0.653       0.567       0.464       0.676       0.615       0.510
+
+runtime 462s
