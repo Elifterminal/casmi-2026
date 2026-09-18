@@ -6,12 +6,19 @@ chat/thread.jsonl, commits and pushes. Rebuild the page afterwards with gen_docs
 
   python3 say.py --from elif --to seda --body "..." --state "..." --ask "..."
 """
-import argparse, datetime, json, os, subprocess, sys
+import argparse, datetime, json, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 THREAD = os.path.join(ROOT, "chat", "thread.jsonl")
 HANDLES = {"elif", "seda", "gpt", "lee"}
 SOFT_WORD_CAP = 120
+STAMP_RE = re.compile(r"^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\]\s+([a-z]+)\s*(?:\u2192|->)\s*([a-z]+):")
+
+
+def stamp(ts, frm, to):
+    """Rule 1: every body opens with when, who wrote it and who it is for, so the
+    attribution survives being quoted out of the file."""
+    return f"[{ts}] {frm} \u2192 {to}: "
 
 
 def load():
@@ -41,16 +48,28 @@ def main():
     if a.back and "|" not in a.back:
         sys.exit("--back must be '<iso-ts>|<why>'")
 
-    words = len(a.body.split())
+    words = len(a.body.split())  # counted before the stamp is added
     if words > SOFT_WORD_CAP:
         print(f"  ! body is {words} words (soft cap {SOFT_WORD_CAP}). "
               f"Check you are not restating something the recipient already has.")
     if "\n" in a.state.strip():
         sys.exit("--state must be a single line")
 
-    msg = {"ts": datetime.datetime.now(datetime.timezone.utc)
-                   .strftime("%Y-%m-%dT%H:%M:%SZ"),
-           "from": a.frm, "to": a.to, "body": a.body.strip(),
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    body = a.body.strip()
+    m = STAMP_RE.match(body)
+    if m:
+        # already stamped by hand -- it must agree with reality, not be a copied header
+        if (m.group(1), m.group(2), m.group(3)) != (ts, a.frm, a.to):
+            body = STAMP_RE.sub("", body).lstrip()
+            print("  ! rewrote a stale hand-written stamp to the real time, sender and recipient")
+    else:
+        m = None
+    if not m:
+        body = stamp(ts, a.frm, a.to) + body
+    
+
+    msg = {"ts": ts, "from": a.frm, "to": a.to, "body": body,
            "state": a.state.strip(), "ask": a.ask.strip()}
     if a.back:
         msg["back"] = a.back

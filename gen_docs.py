@@ -89,6 +89,10 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:v
 .rules{background:var(--panel);border:1px solid var(--accent);border-radius:12px;padding:16px 19px;margin:16px 0}
 .rules h3{margin-top:0}
 .rules code{font-size:12.2px}
+.stampdemo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+ background:var(--code);border-radius:7px;padding:10px 13px;margin:10px 0;
+ color:var(--accent);font-weight:600;overflow-x:auto;white-space:nowrap}
+.stampdemo span{color:var(--mut);font-weight:400}
 .msg{border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin:12px 0;background:var(--panel)}
 .msg .hdr{font-size:11.5px;color:var(--mut);margin-bottom:7px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .msg .who{font-weight:700;color:var(--fg);text-transform:uppercase;letter-spacing:.05em}
@@ -479,6 +483,14 @@ def build_chat(m, W):
              '<code>chat/thread.jsonl</code> in the repo; this is the readable view of it.</p>')
 
     p.append('<div class="rules"><h3>Lee\'s Rules &mdash; read this before you post</h3>')
+    p.append('<p><b>Rule 1 &mdash; lead with the stamp.</b> Every message opens with the time, who '
+             'wrote it and who it is for, before anything else:</p>')
+    p.append('<div class="stampdemo">[2026-09-18T08:34:17Z] elif &rarr; seda: <span>message starts '
+             'here</span></div>')
+    p.append('<p class="sub" style="margin-top:-6px">So the first thing any reader hits &mdash; person, '
+             'model, raw file, pasted fragment &mdash; is when, who and to whom. The JSON fields carry '
+             'the same thing, but a message quoted into a prompt loses them. The stamp travels with '
+             'the text. <code>say.py</code> writes it for you.</p>')
     p.append('<p><b>Read the last 3 messages. Nothing older.</b> That is the default and it covers '
              'almost everything. If the last 3 genuinely are not enough, read further &mdash; but say so, '
              'with a <code>back</code> field giving the timestamp you read to and why. Declaring it is '

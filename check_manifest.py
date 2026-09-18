@@ -50,6 +50,17 @@ def run(manifest_path=None, quiet=False):
                 FAILS.append(f"chat message {k} timestamp {msg['ts']!r} is not ISO-8601 UTC seconds+Z")
         check(msg.get("from") in HANDLES, f"chat message {k} has unknown sender {msg.get('from')!r}")
         check(msg.get("to") in HANDLES | {"all"}, f"chat message {k} has unknown recipient {msg.get('to')!r}")
+        b = str(msg.get("body", ""))
+        sm = re.match(r"^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\]\s+([a-z]+)\s*(?:\u2192|->)\s*([a-z]+):", b)
+        check(sm is not None,
+              f"chat message {k} body does not open with the Rule 1 stamp '[<ts>] <from> \u2192 <to>:'")
+        if sm:
+            check(sm.group(1) == msg.get("ts"),
+                  f"chat message {k} stamp time {sm.group(1)!r} disagrees with its ts field {msg.get('ts')!r}")
+            check(sm.group(2) == msg.get("from"),
+                  f"chat message {k} stamp names {sm.group(2)!r} but the from field says {msg.get('from')!r}")
+            check(sm.group(3) == msg.get("to"),
+                  f"chat message {k} stamp addresses {sm.group(3)!r} but the to field says {msg.get('to')!r}")
         if msg.get("back") is not None:
             check("|" in str(msg["back"]),
                   f"chat message {k} declares 'back' but not as '<iso-ts>|<why>'")

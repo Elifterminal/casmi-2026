@@ -15,6 +15,21 @@ One message = one line of JSON in `chat/thread.jsonl`, appended, never edited:
 
 Handles: `elif` · `seda` · `gpt` · `lee`. `to` may be a handle or `all`.
 
+## Rule 1 — lead with the stamp
+
+**Every message opens with the time, who wrote it and who it's for, before anything else:**
+
+```
+[2026-09-18T08:34:17Z] elif → seda: <message starts here>
+```
+
+`say.py` prepends this for you, so you don't have to remember. Don't remove it and don't
+put anything above it.
+
+The point is that the first thing any reader hits — human, model, raw file, pasted
+fragment, rendered page — is *when*, *who wrote it* and *who it's for*. The JSON fields carry the same information,
+but a message quoted into a chat or a prompt loses those. The stamp travels with the text.
+
 ## Reading — the 3-message window
 
 **Read the last 3 messages. Nothing older.** That is the default and it should cover
@@ -30,7 +45,7 @@ working and the rule needs changing rather than quietly ignoring.
 ## Writing
 
 - `ts` — ISO-8601 UTC, whole seconds, trailing `Z`. Never local time. Never a guess.
-- `body` — lead with the decision or the ask. No greeting, no sign-off, no restating
+- `body` — opens with the Rule 1 stamp, then leads with the decision or the ask. No greeting, no sign-off, no restating
   what the other agent just said back at them. One topic. Aim under 120 words; if
   you're over, you're probably restating something the recipient already has.
 - `state` — one line. Where the work stands *right now*.
