@@ -1,0 +1,62 @@
+loaded 10s  training 275,300  coconut 472,967 (dropped 6,754 COCONUT rows our formula parser can't read)
+[nptsseed10_n300] pools built, fragmented 27,219 new candidates 142s
+[nptsseed10_n300] scored 203s
+[nptsseed11_n300] pools built, fragmented 24,078 new candidates 300s
+[nptsseed11_n300] scored 372s
+[nptsseed12_n300] pools built, fragmented 19,302 new candidates 494s
+[nptsseed12_n300] scored 563s
+E18 — E10 pipeline (pure fragment) on real-database candidate pools, splits nptsseed10_n300, nptsseed11_n300, nptsseed12_n300
+
+median / mean mass-pool size:
+  C1  coconut 35/68   union 48/90
+  C2  coconut 36/65   union 51/88
+  C3  coconut 34/70   union 53/99
+
+split        db                  C1      C2      C3  weighted
+nptsseed10_n300 coconut         0.4222  0.3871  0.0000    0.2417
+nptsseed10_n300 union           0.3612  0.3324  0.0000    0.2074
+nptsseed11_n300 coconut         0.4242  0.3696  0.0000    0.2342
+nptsseed11_n300 union           0.4010  0.3325  0.0000    0.2138
+nptsseed12_n300 coconut         0.3292  0.3398  0.0000    0.2056
+nptsseed12_n300 union           0.2807  0.3058  0.0000    0.1825
+ALL          coconut         0.3919  0.3655  0.0000    0.2272
+ALL          union           0.3477  0.3236  0.0000    0.2012
+
+3-split mean weighted: coconut 0.2272   union 0.2012
+paired Δweighted union − coconut: -0.0259  95% CI [-0.0335, -0.0188]
+
+Class 2 by whether the truth is natively in COCONUT:
+  native=True  n=401  coconut 0.3691   union 0.3256
+  native=False n=  4  coconut 0.0000   union 0.1250
+
+runtime 563s
+loaded 7s  clean=False
+  [nptsseed10_n300] 300 queries, 31,129 candidates characterised
+  [nptsseed11_n300] 300 queries, 58,017 candidates characterised
+  [nptsseed12_n300] 300 queries, 79,448 candidates characterised
+  [nptsseed20_n300] 284 queries, 31,454 candidates characterised
+  [nptsseed21_n300] 283 queries, 56,409 candidates characterised
+  [nptsseed22_n300] 287 queries, 79,225 candidates characterised
+characterised 999s; learned on 37,436 truth/decoy pairs
+E18 ranker features — eval nptsseed10_n300, nptsseed11_n300, nptsseed12_n300, DB=coconut, clean=False, learned on nptsseed20_n300, nptsseed21_n300, nptsseed22_n300 (885 eval query structures excluded from training)
+
+learned weights (raw feature units): explain -21.5, chance_corr +25.1, single +5.04, nb_max +7.01, nb_mean10 +13.7, spec_self -0.656, heavy -0.0216
+
+ranker            C1      C2      C3  weighted  per split
+explain       0.4123  0.3881  0.0000    0.2406  0.260 / 0.241 / 0.221
+chance_corr   0.3952  0.3890  0.0000    0.2383  0.255 / 0.241 / 0.218
+single        0.4448  0.4026  0.0000    0.2523  0.275 / 0.248 / 0.234
+nb_max        0.8555  0.4227  0.0000    0.3271  0.341 / 0.316 / 0.324
+nb_mean10     0.7688  0.4147  0.0000    0.3096  0.336 / 0.300 / 0.293
+spec_self     0.8916  0.1623  0.0000    0.2157  0.228 / 0.220 / 0.199
+learned       0.8117  0.4915  0.0000    0.3511  0.367 / 0.340 / 0.346
+
+paired Δweighted vs explain (95% bootstrap CI, 2000 resamples within class):
+  chance_corr  -0.0023  [-0.0094, +0.0045]
+  single       +0.0117  [+0.0016, +0.0214]   <- clears zero
+  nb_max       +0.0865  [+0.0668, +0.1059]   <- clears zero
+  nb_mean10    +0.0690  [+0.0474, +0.0891]   <- clears zero
+  spec_self    -0.0249  [-0.0445, -0.0061]
+  learned      +0.1105  [+0.0921, +0.1292]   <- clears zero
+
+runtime 1169s

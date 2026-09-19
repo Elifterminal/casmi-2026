@@ -1,0 +1,18 @@
+[nptsseed20_n300] loaded 18s
+[nptsseed20_n300] indexes 105s
+[nptsseed20_n300]  100/300 130s
+[nptsseed20_n300]  200/300 147s
+[nptsseed20_n300]  300/300 167s
+[nptsseed20_n300] wrote /home/lee/casmi-2026/work/splits/pools_nptsseed20_n300.pkl: 300 queries, mass pool median 11 max 413  runtime 167s
+[nptsseed21_n300] loaded 10s
+[nptsseed21_n300] indexes 89s
+[nptsseed21_n300]  100/300 111s
+[nptsseed21_n300]  200/300 135s
+[nptsseed21_n300]  300/300 159s
+[nptsseed21_n300] wrote /home/lee/casmi-2026/work/splits/pools_nptsseed21_n300.pkl: 300 queries, mass pool median 12 max 274  runtime 159s
+[nptsseed22_n300] loaded 10s
+[nptsseed22_n300] indexes 89s
+[nptsseed22_n300]  100/300 114s
+[nptsseed22_n300]  200/300 135s
+[nptsseed22_n300]  300/300 160s
+[nptsseed22_n300] wrote /home/lee/casmi-2026/work/splits/pools_nptsseed22_n300.pkl: 300 queries, mass pool median 10 max 411  runtime 160s

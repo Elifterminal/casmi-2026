@@ -49,7 +49,7 @@ def load_meta():
     return pq.read_table(DATA, columns=META).to_pandas()
 
 
-def build(df, n_query=900, seed=0, only=None):
+def build(df, n_query=900, seed=0, only=None, canon=None):
     rng = np.random.default_rng(seed)
 
     # candidate query structures: NP-ish, in the test's mass range, not absurdly
@@ -69,7 +69,18 @@ def build(df, n_query=900, seed=0, only=None):
         eligible = eligible[eligible.index.isin(only)]
     print(f"eligible query structures: {len(eligible):,} of {len(per):,}")
 
-    keys = rng.permutation(eligible.index.values)[:n_query]
+    if canon is None:                      # legacy: InChIKey14 is the identity
+        keys = rng.permutation(eligible.index.values)[:n_query]
+    else:
+        # Twin-safe: two queries must never be the same molecule under the SCORER's key
+        # (tautomer twins carry different InChIKey14s). Walk the same permutation, keep the
+        # first structure of each scorer-key group.
+        seen, keys = set(), []
+        for k in rng.permutation(eligible.index.values):
+            if canon[k] in seen: continue
+            seen.add(canon[k]); keys.append(k)
+            if len(keys) == n_query: break
+        keys = np.array(keys)
     n1 = int(round(n_query * CLASS_SHARES[0]))
     n2 = int(round(n_query * CLASS_SHARES[1]))
     cls = np.array([1] * n1 + [2] * n2 + [3] * (n_query - n1 - n2))
@@ -98,11 +109,21 @@ def build(df, n_query=900, seed=0, only=None):
     return assign, query_rows
 
 
-def apply_split(df, assign, query_rows):
-    """Return (reference_index_rows, candidate_structures, queries)."""
+def expand(keys, canon):
+    """Every InChIKey14 that is the same molecule (scorer key) as one of keys."""
+    if canon is None: return set(keys)
+    from twins import groups
+    g = groups(canon)
+    return {x for k in keys for x in g[canon[k]]}
+
+
+def apply_split(df, assign, query_rows, canon=None):
+    """Return (reference_index_rows, candidate_structures, queries).
+    With canon (twin-safe), holding a structure out holds out its whole tautomer-twin group:
+    E17 found C2 answers whose twin kept its spectra in the reference index."""
     q_all = {r for rows in query_rows.values() for r in rows}
-    c23 = {k for k, c in assign.items() if c in (2, 3)}
-    c3 = {k for k, c in assign.items() if c == 3}
+    c23 = expand({k for k, c in assign.items() if c in (2, 3)}, canon)
+    c3 = expand({k for k, c in assign.items() if c == 3}, canon)
 
     in_q = np.zeros(len(df), dtype=bool)
     if q_all:
@@ -115,21 +136,29 @@ def apply_split(df, assign, query_rows):
     return np.flatnonzero(ref_mask), cand, queries
 
 
-def verify(df, assign, query_rows, ref_rows, cand):
-    """Positive control. A split that cannot be wrong proves nothing, so check it."""
+def verify(df, assign, query_rows, ref_rows, cand, canon=None):
+    """Positive control. A split that cannot be wrong proves nothing, so check it.
+    With canon, every check is at the SCORER's identity (twin group), not the InChIKey14."""
     fails = []
     ref_keys = set(df["inchikey14"].to_numpy()[ref_rows])
     q_all = {r for rows in query_rows.values() for r in rows}
+    if canon is not None:
+        ref_keys = {canon[k] for k in ref_keys}
+        cand = {canon[k] for k in cand}
+        ids = [canon[k] for k in assign]
+        if len(set(ids)) != len(ids):
+            fails.append(f"{len(ids) - len(set(ids))} query pairs are the same molecule under the scorer key")
+    ident = (lambda k: k) if canon is None else (lambda k: canon[k])
 
     for k, c in assign.items():
-        present = k in ref_keys
+        present = ident(k) in ref_keys
         if c in (2, 3) and present:
             fails.append(f"class {c} structure {k} still has spectra in the reference index")
         if c == 1 and not present:
             fails.append(f"class 1 structure {k} has NO reference spectra (should keep its others)")
-        if c == 3 and k in cand:
+        if c == 3 and ident(k) in cand:
             fails.append(f"class 3 structure {k} is still in the candidate database")
-        if c in (1, 2) and k not in cand:
+        if c in (1, 2) and ident(k) not in cand:
             fails.append(f"class {c} structure {k} is missing from the candidate database")
     if q_all & set(ref_rows.tolist()):
         fails.append("a query spectrum leaked into the reference index")
@@ -142,6 +171,8 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--np-coconut", action="store_true",
                     help="E16: query molecules only from structures natively in COCONUT")
+    ap.add_argument("--legacy-inchikey", action="store_true",
+                    help="pre-E17 behaviour: hold out by InChIKey14 only (reproduces old splits)")
     a = ap.parse_args()
 
     t0 = time.time()
@@ -149,8 +180,13 @@ def main():
     df = load_meta().reset_index(drop=True)
     print(f"  {len(df):,} spectra, {df['inchikey14'].nunique():,} structures")
 
-    assign, query_rows = build(df, a.n_query, a.seed, coconut_keys() if a.np_coconut else None)
-    ref_rows, cand, queries = apply_split(df, assign, query_rows)
+    canon = None
+    if not a.legacy_inchikey:
+        from twins import train_canon
+        canon = train_canon(df)
+        print(f"  twin-safe: {len(canon):,} structures, {len(set(canon.values())):,} scorer identities")
+    assign, query_rows = build(df, a.n_query, a.seed, coconut_keys() if a.np_coconut else None, canon)
+    ref_rows, cand, queries = apply_split(df, assign, query_rows, canon)
 
     counts = pd.Series([c for c in assign.values()]).value_counts().sort_index()
     print("\nclass assignment:")
@@ -164,7 +200,7 @@ def main():
           f"(median {int(np.median([len(v) for v in query_rows.values()]))} each)")
 
     print("\n--- verifying the split does what it claims ---")
-    fails = verify(df, assign, query_rows, ref_rows, cand)
+    fails = verify(df, assign, query_rows, ref_rows, cand, canon)
     if fails:
         print(f"  {len(fails)} PROBLEM(S):")
         for f in fails[:10]:
@@ -177,11 +213,14 @@ def main():
     print("  ok  no query spectrum leaked into the reference index")
 
     os.makedirs(OUT, exist_ok=True)
-    tag = f"{'np' if a.np_coconut else ''}seed{a.seed}_n{a.n_query}"
+    tag = f"{'np' if a.np_coconut else ''}{'' if canon is None else 'ts'}seed{a.seed}_n{a.n_query}"
+    c3 = {k for k, c in assign.items() if c == 3}
+    db_exclude = sorted(expand(c3, canon) - c3)    # training-side twins of Class 3 answers
     with open(f"{OUT}/split_{tag}.json", "w") as fh:
         json.dump({"seed": a.seed, "n_query": a.n_query,
                    "class_shares_UNVERIFIED": CLASS_SHARES,
                    "assign": {k: int(v) for k, v in assign.items()},
+                   "twin_safe": canon is not None, "db_exclude": db_exclude,
                    "query_rows": {k: [int(r) for r in v] for k, v in query_rows.items()}},
                   fh)
     np.save(f"{OUT}/ref_rows_{tag}.npy", np.asarray(ref_rows))

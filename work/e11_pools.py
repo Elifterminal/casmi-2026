@@ -66,7 +66,8 @@ def main(split):
     struct = pd.DataFrame({"k": keys, "f": formula, "s": smiles}).drop_duplicates("k")
     massk = {k: formula_mass(f) for k, f in zip(struct["k"], struct["f"])}
     smik = dict(zip(struct["k"], struct["s"]))
-    c3 = {k for k, c in assign.items() if c == 3}
+    from twins import db_exclusions
+    c3 = db_exclusions(sp, None)            # twin-safe splits also drop Class 3 twins
     dbk = np.array([k for k in struct["k"] if k not in c3 and np.isfinite(massk[k])])
     midx = MassIndex(dbk, np.array([massk[k] for k in dbk]))
     print(f"[{split}] indexes {time.time()-t0:.0f}s", flush=True)

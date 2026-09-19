@@ -1,0 +1,22 @@
+E17c ranker features — eval NP splits 10-12, DB=coconut, clean=True (tautomer twins removed; 38 of 756 eval C2/C3 queries had one in their hits), learned on NP splits 20-22 (885 eval query structures excluded from training)
+
+learned weights (raw feature units): explain -23.8, chance_corr +26.8, single +5.54, nb_max +6.67, nb_mean10 +16, spec_self -0.795, heavy -0.0186
+
+ranker            C1      C2      C3  weighted  per split
+explain       0.4123  0.3881  0.0085    0.2439  0.260 / 0.248 / 0.224
+chance_corr   0.3952  0.3890  0.0087    0.2417  0.255 / 0.248 / 0.222
+single        0.4448  0.4026  0.0066    0.2549  0.275 / 0.252 / 0.237
+nb_max        0.8573  0.4233  0.0106    0.3318  0.346 / 0.321 / 0.328
+nb_mean10     0.7734  0.4160  0.0034    0.3123  0.339 / 0.305 / 0.293
+spec_self     0.8916  0.1623  0.0009    0.2160  0.228 / 0.221 / 0.199
+learned       0.8093  0.4946  0.0116    0.3566  0.370 / 0.354 / 0.345
+
+paired Δweighted vs explain (95% bootstrap CI, 2000 resamples within class):
+  chance_corr  -0.0023  [-0.0097, +0.0047]
+  single       +0.0110  [+0.0006, +0.0208]   <- clears zero
+  nb_max       +0.0878  [+0.0677, +0.1083]   <- clears zero
+  nb_mean10    +0.0683  [+0.0467, +0.0889]   <- clears zero
+  spec_self    -0.0279  [-0.0481, -0.0092]
+  learned      +0.1127  [+0.0940, +0.1317]   <- clears zero
+
+runtime 1885s

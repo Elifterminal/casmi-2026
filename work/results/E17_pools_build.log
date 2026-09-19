@@ -11,3 +11,8 @@
 [npseed21_n300]  300/300 164s
 [npseed21_n300] wrote /home/lee/casmi-2026/work/splits/pools_npseed21_n300.pkl: 300 queries, mass pool median 12 max 274  runtime 164s
 [npseed22_n300] loaded 11s
+[npseed22_n300] indexes 90s
+[npseed22_n300]  100/300 117s
+[npseed22_n300]  200/300 139s
+[npseed22_n300]  300/300 164s
+[npseed22_n300] wrote /home/lee/casmi-2026/work/splits/pools_npseed22_n300.pkl: 300 queries, mass pool median 10 max 411  runtime 164s

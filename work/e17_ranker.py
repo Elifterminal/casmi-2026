@@ -27,6 +27,14 @@ PREDICTIONS (before the run, 2026-09-18):
   P1  chance_corr beats explain on C2 (it removes exactly the bias E11 exposed).
   P2  nb_max is the strongest single feature on C2.
   P3  learned beats every single feature, by >= +0.02 weighted over explain, CI clear of zero.
+  RESULT (uncleaned run): learned 0.3647 (+0.121 [+0.102,+0.140]); nb_max 0.3405; explain 0.2439.
+      P1 FAIL (chance_corr -0.002, n.s.). P2 PASS (nb_max strongest single). P3 PASS.
+      LEAK FOUND AFTERWARDS: 19/405 C2 queries had a tautomer twin of the truth (different
+      InChIKey14, same scorer key14) among their spectral hits -- the harness holds out by
+      InChIKey14, the scorer canonicalises tautomers. nb_max/spec_self exploit it. E17c = the
+      same run with twins removed (--clean). Superseded by E18 (twin-safe harness).
+  E17c (post-hoc clean, 38/756 C2/C3 queries had a twin in their hits): learned 0.3566
+      (+0.1127 [+0.094,+0.132]), nb_max 0.3318. Leak cost the learned ranker ~0.008.
 """
 import json, os, pickle, sys, time
 from collections import defaultdict
@@ -42,6 +50,7 @@ from e07_fragment import fragment_masses, explain, MONO, H, TOL, MAX_HEAVY
 from e08_unified import PPM, TOPN
 from e11_ringbreak import _components
 from e15_coconut_pools import load_structures
+from twins import db_exclusions
 import scoring
 
 SPLITS = os.path.expanduser("~/casmi-2026/work/splits")
@@ -83,17 +92,27 @@ def chance(frag, precursor_neutral):
     return min(1.0, 3 * len(frag) * 2 * TOL / precursor_neutral)
 
 
-def build_queries(splits, db, st, excl=frozenset()):
-    """Per query: candidate keys + features. Returns list of dicts."""
+def twin_keys(k, byf, trf, trs):
+    """Training keys that are the SAME molecule as k under the scorer's key (tautomer twins
+    stored under a different InChIKey14). Tautomers share a formula, so only same-formula
+    structures need canonicalising. E17 leak check: 19/405 NP C2 queries had one."""
+    t = scoring.key14(trs.get(k, ""))
+    return {k2 for k2 in byf.get(trf.get(k), ()) if k2 != k and scoring.key14(trs[k2]) == t}
+
+
+def build_queries(splits, db, st, excl=frozenset(), clean=False, leaks=None):
+    """Per query: candidate keys + features. Returns list of dicts.
+    clean=True removes tautomer twins of Class 2/3 truths from the spectral hits (E17c)."""
     keys, pmz, add, tr, co, _ = st
     trm, trs = dict(zip(tr.k, tr.m)), dict(zip(tr.k, tr.s))
+    trf = dict(zip(tr.k, tr.f)); byf = tr.groupby("f").k.apply(list).to_dict() if clean else {}
     com, cos_ = dict(zip(co.k, co.m)), dict(zip(co.k, co.s))
     smi = {**cos_, **trs}
     out, info, fpo = [], {}, {}
     for split in splits:
         sp = json.load(open(f"{SPLITS}/split_{split}.json")); assign, qrows = sp["assign"], sp["query_rows"]
         pools = {p["k"]: p for p in pickle.load(open(f"{SPLITS}/pools_{split}.pkl", "rb"))}
-        c3 = {k for k, c in assign.items() if c == 3}
+        c3 = db_exclusions(sp, tr, co)      # == Class 3 keys on legacy splits
         src = {"coconut": com, "union": {**com, **trm}, "train": trm}[db]
         dbm = {k: m for k, m in src.items() if k not in c3}
         idx = MassIndex(np.array(list(dbm)), np.array(list(dbm.values())))
@@ -104,7 +123,12 @@ def build_queries(splits, db, st, excl=frozenset()):
             for r in rows:
                 M = neutral_mass(pmz[r], add[r])
                 if np.isfinite(M) and M > 0: s.update(idx.window(M, PPM).tolist()); Ms.append(M)
-            qs.append((split, k, assign[k], s, float(np.median(Ms)) if Ms else np.nan, pools[k]))
+            p = pools[k]
+            if clean and assign[k] in (2, 3):   # before characterising, so the new top-50 is covered
+                tw = twin_keys(k, byf, trf, trs)
+                if leaks is not None: leaks.append(len(tw & set(p["spec"])) > 0)
+                p = {**p, "spec": {h: v for h, v in p["spec"].items() if h not in tw}}
+            qs.append((split, k, assign[k], s, float(np.median(Ms)) if Ms else np.nan, p))
         need = sorted({smi[c] for *_, s, _, _ in qs for c in s} | {smi.get(c, "") for *_, p in qs
                       for c in sorted(p["spec"], key=lambda c: -p["spec"][c])[:NB_TOP]} - set(info))
         with Pool(7) as pool:
@@ -157,13 +181,14 @@ def fit(train_q):
     return w, len(y) // 2
 
 
-def main(db="coconut"):
+def main(db="coconut", clean=False, train=TRAIN, evals=EVAL, tag=None):
     t0 = time.time()
     st = load_structures()
-    print(f"loaded {time.time()-t0:.0f}s", flush=True)
-    ev = build_queries(EVAL, db, st)
+    print(f"loaded {time.time()-t0:.0f}s  clean={clean}", flush=True)
+    leaks = []
+    ev = build_queries(evals, db, st, clean=clean, leaks=leaks)
     excl = frozenset(q["k"] for q in ev)
-    tr = build_queries(TRAIN, db, st, excl)
+    tr = build_queries(train, db, st, excl, clean=clean)
     w, npairs = fit(tr)
     print(f"characterised {time.time()-t0:.0f}s; learned on {npairs:,} truth/decoy pairs", flush=True)
 
@@ -171,7 +196,10 @@ def main(db="coconut"):
     scorers["learned"] = lambda x: float(np.dot(w, [x[f] for f in FEATS]))
     per = [{"split": q["split"], "cls": q["cls"], **{n: rr(q, s) for n, s in scorers.items()}} for q in ev]
 
-    L = [f"E17 ranker features — eval NP splits 10-12, DB={db}, learned on NP splits 20-22 "
+    tag = tag or ("E17c" if clean else "E17")
+    L = [f"{tag} ranker features — eval {', '.join(evals)}, DB={db}, clean={clean}"
+         + (f" (tautomer twins removed; {sum(leaks)} of {len(leaks)} eval C2/C3 queries had one in their hits)" if clean else "")
+         + f", learned on {', '.join(train)} "
          f"({len(excl)} eval query structures excluded from training)", "",
          "learned weights (raw feature units): " + ", ".join(f"{f} {v:+.3g}" for f, v in zip(FEATS, w)), "",
          f"{'ranker':12s} {'C1':>7} {'C2':>7} {'C3':>7} {'weighted':>9}  per split"]
@@ -180,7 +208,7 @@ def main(db="coconut"):
     for n in scorers:
         c = [np.mean([r[n] for r in by[k]]) for k in (1, 2, 3)]
         wt = sum(W[k] * c[k - 1] for k in (1, 2, 3))
-        splits = [sum(W[k] * np.mean([r[n] for r in by[k] if r["split"] == s]) for k in (1, 2, 3)) for s in EVAL]
+        splits = [sum(W[k] * np.mean([r[n] for r in by[k] if r["split"] == s]) for k in (1, 2, 3)) for s in evals]
         res[n] = dict(C1=c[0], C2=c[1], C3=c[2], weighted=wt, splits=splits)
         L.append(f"{n:12s} {c[0]:>7.4f} {c[1]:>7.4f} {c[2]:>7.4f} {wt:>9.4f}  " + " / ".join(f"{x:.3f}" for x in splits))
     L += ["", "paired Δweighted vs explain (95% bootstrap CI, 2000 resamples within class):"]
@@ -194,10 +222,10 @@ def main(db="coconut"):
         L.append(f"  {n:12s} {full:+.4f}  [{lo:+.4f}, {hi:+.4f}]{'   <- clears zero' if lo > 0 else ''}")
     L.append(f"\nruntime {time.time()-t0:.0f}s")
     print("\n".join(L))
-    open(f"{RESULTS}/E17_ranker_{db}_2026-09-18.txt", "w").write("\n".join(L) + "\n")
-    json.dump(dict(db=db, weights=dict(zip(FEATS, map(float, w))), results=res),
-              open(f"{RESULTS}/E17_ranker_{db}.json", "w"), indent=2)
+    open(f"{RESULTS}/{tag}_ranker_{db}_2026-09-18.txt", "w").write("\n".join(L) + "\n")
+    json.dump(dict(db=db, clean=clean, weights=dict(zip(FEATS, map(float, w))), results=res),
+              open(f"{RESULTS}/{tag}_ranker_{db}.json", "w"), indent=2)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "coconut")
+    main(sys.argv[1] if len(sys.argv) > 1 else "coconut", "--clean" in sys.argv)

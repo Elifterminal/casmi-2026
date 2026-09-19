@@ -1,0 +1,25 @@
+E18 — E10 pipeline (pure fragment) on real-database candidate pools, splits nptsseed10_n300, nptsseed11_n300, nptsseed12_n300
+
+median / mean mass-pool size:
+  C1  coconut 35/68   union 48/90
+  C2  coconut 36/65   union 51/88
+  C3  coconut 34/70   union 53/99
+
+split        db                  C1      C2      C3  weighted
+nptsseed10_n300 coconut         0.4222  0.3871  0.0000    0.2417
+nptsseed10_n300 union           0.3612  0.3324  0.0000    0.2074
+nptsseed11_n300 coconut         0.4242  0.3696  0.0000    0.2342
+nptsseed11_n300 union           0.4010  0.3325  0.0000    0.2138
+nptsseed12_n300 coconut         0.3292  0.3398  0.0000    0.2056
+nptsseed12_n300 union           0.2807  0.3058  0.0000    0.1825
+ALL          coconut         0.3919  0.3655  0.0000    0.2272
+ALL          union           0.3477  0.3236  0.0000    0.2012
+
+3-split mean weighted: coconut 0.2272   union 0.2012
+paired Δweighted union − coconut: -0.0259  95% CI [-0.0335, -0.0188]
+
+Class 2 by whether the truth is natively in COCONUT:
+  native=True  n=401  coconut 0.3691   union 0.3256
+  native=False n=  4  coconut 0.0000   union 0.1250
+
+runtime 563s

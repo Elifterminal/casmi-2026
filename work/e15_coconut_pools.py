@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from candidates import formula_mass, neutral_mass, MassIndex
 from e07_fragment import fragment_masses, explain
 from e08_unified import PPM, TOPN
+from twins import db_exclusions
 import scoring
 
 DATA = os.path.expanduser("~/casmi-2026/work/data/train.parquet")
@@ -86,7 +87,7 @@ def main(splits=E15_SPLITS, dbs=DBS, tag="E15"):
     for split in splits:
         sp = json.load(open(f"{SPLITS}/split_{split}.json")); assign, qrows = sp["assign"], sp["query_rows"]
         pools = {p["k"]: p for p in pickle.load(open(f"{SPLITS}/pools_{split}.pkl", "rb"))}
-        c3 = {k for k, c in assign.items() if c == 3}
+        c3 = db_exclusions(sp, tr, co)      # == Class 3 keys on legacy splits
         truths = {k for k, c in assign.items() if c in (1, 2) and k in trm}
         dbm = {"train": {k: m for k, m in trm.items() if k not in c3},
                "coconut": {k: m for k, m in com.items() if k not in c3},
