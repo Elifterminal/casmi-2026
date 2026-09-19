@@ -1,0 +1,21 @@
+{
+  "source": "E18 learned pairwise LR, twin-safe NP splits nptsseed20-22, COCONUT pools",
+  "features": [
+    "explain",
+    "chance_corr",
+    "single",
+    "nb_max",
+    "nb_mean10",
+    "spec_self",
+    "heavy"
+  ],
+  "weights": {
+    "explain": -21.50185622494277,
+    "chance_corr": 25.137596968823196,
+    "single": 5.036571427550288,
+    "nb_max": 7.012714685378833,
+    "nb_mean10": 13.707949151926572,
+    "spec_self": -0.6561734373399128,
+    "heavy": -0.02158052846319766
+  }
+}

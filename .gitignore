@@ -15,3 +15,8 @@ work/splits/
 
 .channel_key
 worker/wiring.json
+
+# Kaggle dataset payload (RDKit wheels, trimmed COCONUT) -- rebuilt locally, uploaded to Kaggle, not versioned here
+work/notebook/dataset/wheels/
+work/notebook/dataset/coconut_min.parquet
+work/notebook/submission.csv
