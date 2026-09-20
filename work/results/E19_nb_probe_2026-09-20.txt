@@ -1,0 +1,8 @@
+E19 — neighbour-vote dependence on near-duplicate relatives (learned ranker, E18 weights)
+
+hits kept        C1       C2       C3  weighted   vs none  hits dropped
+none         0.8117   0.4915   0.0000    0.3511   +0.0000  0
+<0.95        0.4323   0.4832   0.0000    0.2866   -0.0645  1,063
+<0.80        0.4203   0.4766   0.0000    0.2817   -0.0693  3,090
+
+runtime 649s

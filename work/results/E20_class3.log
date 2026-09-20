@@ -1,0 +1,21 @@
+[nptsseed10_n300] generated 234 candidates (0 median per query) 131s
+[nptsseed10_n300] characterised 31,335 structures 149s
+[nptsseed10_n300] scored 330s
+[nptsseed11_n300] generated 440 candidates (0 median per query) 420s
+[nptsseed11_n300] characterised 32,571 structures 440s
+[nptsseed11_n300] scored 641s
+[nptsseed12_n300] generated 275 candidates (0 median per query) 759s
+[nptsseed12_n300] characterised 30,856 structures 778s
+[nptsseed12_n300] scored 963s
+E20 — Class 3 by analog editing, merged into the same 25 slots
+
+generation recall on Class 3: 18/351 = 5.1% (the true structure was built at all)
+
+candidates                   C1       C2       C3  weighted
+retrieval                0.8122   0.4920   0.0000    0.3513
+retrieval+generated      0.8122   0.4773   0.0285    0.3558
+
+net change from generating: +0.0045 weighted
+paired bootstrap 95% CI: [-0.0021, +0.0124]
+
+runtime 964s
