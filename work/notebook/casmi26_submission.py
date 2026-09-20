@@ -8,8 +8,17 @@ import glob, json, os, subprocess, sys, time
 T0 = time.time()
 ON_KAGGLE = os.path.exists("/kaggle/input")
 if ON_KAGGLE:
-    COMP = glob.glob("/kaggle/input/*casmi26*molecule*")[0]
-    ASSETS = [d for d in glob.glob("/kaggle/input/*") if os.path.exists(f"{d}/casmi_pipeline.py")][0]
+    # Find each input by what it contains, not by its name: the competition folder is
+    # "enveda-CASMI26-molecule-id-mass-spectra" and a case-sensitive glob missed it (v1 failed here).
+    def _find(marker):
+        # Inputs may sit one level down (/kaggle/input/<name>/) or nested
+        # (/kaggle/input/competitions/<name>/, /kaggle/input/datasets/<user>/<name>/), so search both.
+        hits = sorted(glob.glob(f"/kaggle/input/**/{marker}", recursive=True))
+        if not hits:
+            raise RuntimeError(f"nothing under /kaggle/input contains {marker}; "
+                               f"tree: {sorted(glob.glob('/kaggle/input/*/*'))[:20]}")
+        return os.path.dirname(hits[0])
+    COMP, ASSETS = _find("test.parquet"), _find("casmi_pipeline.py")
     OUT = "/kaggle/working/submission.csv"
 else:
     HERE = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +39,8 @@ except ImportError:
     have = None
 if have != "2026.03.3":
     tag = f"cp{sys.version_info.major}{sys.version_info.minor}"
-    whl = glob.glob(f"{ASSETS}/wheels/rdkit-2026.3.3-{tag}-*.whl")
+    whl = (glob.glob(f"{ASSETS}/rdkit-2026.3.3-{tag}-*.whl")
+           or glob.glob(f"{ASSETS}/wheels/rdkit-2026.3.3-{tag}-*.whl"))
     if not whl:
         raise RuntimeError(f"no bundled RDKit wheel for {tag}; have {have}")
     subprocess.run([sys.executable, "-m", "pip", "install", "--no-index", "--no-deps", "-q", whl[0]], check=True)
