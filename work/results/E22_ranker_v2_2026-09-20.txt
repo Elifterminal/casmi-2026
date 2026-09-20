@@ -1,0 +1,15 @@
+E22 — ranker retrained with generated candidates in the training data
+
+weights: explain -20.8, chance_corr +24.1, single +4.36, nb_max +6.37, nb_mean10 +15, spec_self -0.564, heavy -0.0314, is_generated -0.717
+
+variant                              C1       C2       C3  weighted
+E18 weights, retrieval only      0.8122   0.4920   0.0000    0.3513
+E18 weights, + generated         0.8067   0.4681   0.0363    0.3539
+E22 weights, retrieval only      0.8133   0.4932   0.0000    0.3521
+E22 weights, + generated         0.8125   0.4822   0.0311    0.3591
+
+E18 weights, + generated       vs baseline: +0.0025  95% CI [-0.0057, +0.0115]
+E22 weights, retrieval only    vs baseline: +0.0007  95% CI [-0.0013, +0.0030]
+E22 weights, + generated       vs baseline: +0.0078  95% CI [+0.0013, +0.0148]   <- clears zero
+
+runtime 2205s

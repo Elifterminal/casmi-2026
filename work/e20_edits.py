@@ -127,6 +127,119 @@ def prenylate(mol):
     return [_attach(mol, i, "CC=C(C)C") for i in sites]
 
 
+# ---- edit library v2 (E21): the rest of the list catalogued in E12 -----------------------
+# E20 used nine edits and reached a matching mass gap for 19.4% of Class 3 queries; the
+# seventeen-edit list from E12 would have reached 36.2%. These are the missing ones, limited to
+# edits with an unambiguous structural operation (NH, O2 and CH2O are left out: no single
+# obvious site chemistry, so they would generate noise rather than candidates).
+PENTOSE = "C1OCC(O)C(O)C1O"              # xylopyranosyl, anomeric carbon first
+DEOXYHEXOSE = "C1OC(C)C(O)C(O)C1O"       # rhamnosyl
+GLUCURONYL = "C1OC(C(=O)O)C(O)C(O)C1O"   # glucuronic acid, anomeric carbon first
+
+
+def dehydrate(mol):
+    """-H2O: drop a hydroxyl and an H from the neighbouring carbon, leaving a double bond."""
+    out = []
+    for a in mol.GetAtoms():
+        if a.GetSymbol() != "O" or a.GetDegree() != 1 or a.GetTotalNumHs() != 1: continue
+        c = a.GetNeighbors()[0]
+        if c.GetSymbol() != "C": continue
+        for nb in c.GetNeighbors():
+            if nb.GetIdx() == a.GetIdx() or nb.GetSymbol() != "C" or not _has_h(nb): continue
+            if c.GetIsAromatic() or nb.GetIsAromatic(): continue
+            rw = Chem.RWMol(mol)
+            rw.GetBondBetweenAtoms(c.GetIdx(), nb.GetIdx()).SetBondType(Chem.BondType.DOUBLE)
+            rw.RemoveAtom(a.GetIdx())
+            out.append(_clean(rw))
+    return out
+
+
+def hydrate(mol):
+    """+H2O: add H and OH across a C=C."""
+    out = []
+    for b in mol.GetBonds():
+        if b.GetBondType() != Chem.BondType.DOUBLE: continue
+        x, y = b.GetBeginAtom(), b.GetEndAtom()
+        if x.GetIsAromatic() or y.GetIsAromatic(): continue
+        if x.GetSymbol() != "C" or y.GetSymbol() != "C": continue
+        for target in (x.GetIdx(), y.GetIdx()):
+            rw = Chem.RWMol(mol)
+            rw.GetBondBetweenAtoms(x.GetIdx(), y.GetIdx()).SetBondType(Chem.BondType.SINGLE)
+            o = rw.AddAtom(Chem.Atom(8))
+            rw.AddBond(target, o, Chem.BondType.SINGLE)
+            out.append(_clean(rw))
+    return out
+
+
+def decarboxylate(mol):
+    """-CO2: remove a carboxylic acid, leaving H on the carbon it hung from."""
+    patt = Chem.MolFromSmarts("[#6]-[CX3](=O)[OX2H1]")
+    return [_delete(mol, list(m[1:])) for m in mol.GetSubstructMatches(patt)]
+
+
+def carboxylate(mol):
+    return [_attach(mol, a.GetIdx(), "C(=O)O") for a in mol.GetAtoms()
+            if a.GetSymbol() == "C" and _has_h(a)]
+
+
+def sulfate(mol):
+    return [_attach(mol, a.GetIdx(), "S(=O)(=O)O") for a in mol.GetAtoms()
+            if a.GetSymbol() == "O" and _has_h(a)]
+
+
+def desulfate(mol):
+    patt = Chem.MolFromSmarts("[OX2]-[SX4](=O)(=O)[OX2H1]")
+    return [_delete(mol, list(m[1:])) for m in mol.GetSubstructMatches(patt)]
+
+
+def pentosylate(mol):
+    return [_attach(mol, a.GetIdx(), PENTOSE) for a in mol.GetAtoms()
+            if a.GetSymbol() == "O" and _has_h(a)]
+
+
+def deoxyhexosylate(mol):
+    return [_attach(mol, a.GetIdx(), DEOXYHEXOSE) for a in mol.GetAtoms()
+            if a.GetSymbol() == "O" and _has_h(a)]
+
+
+def glucuronidate(mol):
+    return [_attach(mol, a.GetIdx(), GLUCURONYL) for a in mol.GetAtoms()
+            if a.GetSymbol() == "O" and _has_h(a)]
+
+
+def ethylate(mol):
+    return [_attach(mol, a.GetIdx(), "CC") for a in mol.GetAtoms()
+            if a.GetSymbol() in ("O", "N") and _has_h(a)]
+
+
+def reduce_bond(mol):
+    """+H2: saturate a C=C, or turn a ketone/aldehyde into an alcohol."""
+    out = []
+    for b in mol.GetBonds():
+        if b.GetBondType() != Chem.BondType.DOUBLE: continue
+        x, y = b.GetBeginAtom(), b.GetEndAtom()
+        if x.GetIsAromatic() or y.GetIsAromatic(): continue
+        pair = {x.GetSymbol(), y.GetSymbol()}
+        if pair == {"C"} or pair == {"C", "O"}:
+            rw = Chem.RWMol(mol)
+            rw.GetBondBetweenAtoms(x.GetIdx(), y.GetIdx()).SetBondType(Chem.BondType.SINGLE)
+            out.append(_clean(rw))
+    return out
+
+
+def oxidise(mol):
+    """-H2: turn a secondary or primary alcohol into a carbonyl."""
+    out = []
+    for a in mol.GetAtoms():
+        if a.GetSymbol() != "O" or a.GetDegree() != 1 or a.GetTotalNumHs() != 1: continue
+        c = a.GetNeighbors()[0]
+        if c.GetSymbol() != "C" or c.GetIsAromatic() or not _has_h(c): continue
+        rw = Chem.RWMol(mol)
+        rw.GetBondBetweenAtoms(c.GetIdx(), a.GetIdx()).SetBondType(Chem.BondType.DOUBLE)
+        out.append(_clean(rw))
+    return out
+
+
 # name -> (neutral mass added, function). Negative edits remove that mass.
 EDITS = {
     "+CH2":      (14.015650, methylate),
@@ -138,6 +251,18 @@ EDITS = {
     "+C6H10O5": (162.052824, glycosylate),
     "-C6H10O5": (-162.052824, deglycosylate),
     "+C5H8":     (68.062600, prenylate),
+    "-H2O":     (-18.010565, dehydrate),
+    "+H2O":      (18.010565, hydrate),
+    "-CO2":     (-43.989829, decarboxylate),
+    "+CO2":      (43.989829, carboxylate),
+    "+SO3":      (79.956815, sulfate),
+    "-SO3":     (-79.956815, desulfate),
+    "+C5H8O4":  (132.042259, pentosylate),
+    "+C6H10O4": (146.057909, deoxyhexosylate),
+    "+C6H8O6":  (176.032088, glucuronidate),
+    "+C2H4":     (28.031300, ethylate),
+    "+H2":        (2.015650, reduce_bond),
+    "-H2":       (-2.015650, oxidise),
 }
 
 
@@ -172,6 +297,10 @@ def selftest():
         "+CH2": "Oc1ccc(O)cc1", "-CH2": "COc1ccc(O)cc1", "+O": "c1ccccc1C", "-O": "Oc1ccc(O)cc1",
         "+C2H2O": "Oc1ccc(O)cc1", "-C2H2O": "CC(=O)Oc1ccccc1", "+C6H10O5": "Oc1ccc(O)cc1",
         "-C6H10O5": "OC[C@H]1O[C@@H](Oc2ccccc2)[C@H](O)[C@@H](O)[C@@H]1O", "+C5H8": "Oc1ccc(O)cc1",
+        "-H2O": "CC(O)CC", "+H2O": "CC=CC", "-CO2": "OC(=O)Cc1ccccc1", "+CO2": "Cc1ccccc1",
+        "+SO3": "Oc1ccc(O)cc1", "-SO3": "OS(=O)(=O)Oc1ccccc1", "+C5H8O4": "Oc1ccc(O)cc1",
+        "+C6H10O4": "Oc1ccc(O)cc1", "+C6H8O6": "Oc1ccc(O)cc1", "+C2H4": "Oc1ccc(O)cc1",
+        "+H2": "CC=CC", "-H2": "CC(O)CC",
     }
     ok = True
     for name, (dm, _) in EDITS.items():
