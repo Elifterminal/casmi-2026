@@ -82,13 +82,16 @@ mols = [dict(id=mid, spectra=[(np.asarray(r.ms2_mzs, np.float32), np.asarray(r.m
         for mid, g in test.groupby("molecule_id", sort=False)]
 log(f"test: {len(test):,} spectra, {len(mols)} molecules")
 
-pred = cp.predict(mols, sindex, midx, smi_of, weights, procs=os.cpu_count() or 4, log=log)
+# limit=50: spare candidates so the 25 slots survive dropping scorer-duplicate guesses
+# (validate_port.py measured this: +0.0002 weighted over the three eval splits, never negative)
+pred = cp.predict(mols, sindex, midx, smi_of, weights, procs=os.cpu_count() or 4, log=log, limit=50)
 
 # ---- submission ------------------------------------------------------------------------
 FALLBACK = "CCO"          # never emit an empty row: a missing/null prediction rejects the file
 rows, empty = [], 0
 for m in mols:
-    smis = [s for s in (smi_of(k) for k in pred.get(m["id"], [])) if s and ";" not in s][:cp.TOPN]
+    keep = cp.dedupe([k for k in pred.get(m["id"], []) if smi_of(k) and ";" not in smi_of(k)], smi_of)
+    smis = [smi_of(k) for k in keep][:cp.TOPN]
     if not smis: smis, empty = [FALLBACK], empty + 1
     rows.append((m["id"], ";".join(smis)))
 sub = pd.DataFrame(rows, columns=["molecule_id", "smiles"])

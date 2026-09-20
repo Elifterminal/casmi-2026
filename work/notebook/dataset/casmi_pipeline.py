@@ -15,11 +15,13 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from functools import lru_cache
 from multiprocessing import Pool
 
 import numpy as np
 from rdkit import Chem, DataStructs, RDLogger
-from rdkit.Chem import rdFingerprintGenerator
+from rdkit.Chem import inchi, rdFingerprintGenerator
+from rdkit.Chem.MolStandardize import rdMolStandardize
 
 RDLogger.DisableLog("rdApp.*")
 
@@ -51,6 +53,7 @@ ADDUCT_SHIFT = {
 _MONO = {k: _E[k] for k in ("C", "H", "N", "O", "S", "P", "Cl", "Br", "F", "I", "Si", "Se", "B", "Na", "K")}
 _TOK = re.compile(r"([A-Z][a-z]?)(\d*)")
 _FPG = rdFingerprintGenerator.GetMorganGenerator(radius=2, fpSize=2048)
+_ENUM = rdMolStandardize.TautomerEnumerator()
 
 
 # ---- masses ---------------------------------------------------------------------------
@@ -203,6 +206,32 @@ def explain(mz, it, frag_masses, positive) -> float:
     return matched / wsum if wsum > 0 else 0.0
 
 
+@lru_cache(maxsize=1_000_000)
+def key14(smiles):
+    """The scorer's identity for a structure: tautomer-canonicalise, then InChIKey first block.
+    Used only to drop guesses that are the same molecule (a repeat is a wasted slot)."""
+    if not smiles: return None
+    m = Chem.MolFromSmiles(smiles)
+    if m is None: return None
+    try: m = _ENUM.Canonicalize(m)
+    except Exception: pass
+    try: k = inchi.MolToInchiKey(m)
+    except Exception: return None
+    return k.split("-")[0] if k else None
+
+
+def dedupe(cands, smi_of, limit=TOPN):
+    """Keep the first of each scorer-identical guess, so 25 slots hold 25 distinct answers."""
+    seen, out = set(), []
+    for c in cands:
+        k = key14(smi_of(c))
+        if k is not None and k in seen: continue
+        if k is not None: seen.add(k)
+        out.append(c)
+        if len(out) == limit: break
+    return out
+
+
 def chance(frag, M) -> float:
     if not frag or not np.isfinite(M) or M <= 0: return 0.0
     return min(1.0, 3 * len(frag) * 2 * TOL / M)
@@ -231,12 +260,13 @@ def features(q, cands, spec, info, smi_of):
     return out
 
 
-def rank(feats, spec, cands, weights):
-    """Learned score over mass candidates, tie-break on key, then spectral-only hits by key."""
+def rank(feats, spec, cands, weights, limit=TOPN):
+    """Learned score over mass candidates, tie-break on key, then spectral-only hits by key.
+    limit > 25 returns spare candidates, so the caller can drop duplicates and still fill 25."""
     w = np.array([weights[f] for f in FEATS])
     sc = {c: float(np.dot(w, [f[x] for x in FEATS])) for c, f in feats.items()}
     ranked = sorted(sc, key=lambda c: (-sc[c], c))
-    return (ranked + sorted(set(spec) - set(cands))[:TOPN])[:TOPN]
+    return (ranked + sorted(set(spec) - set(cands))[:limit])[:limit]
 
 
 def characterise(smiles, procs=4, cache=None):
@@ -251,7 +281,7 @@ def characterise(smiles, procs=4, cache=None):
     return cache
 
 
-def predict(molecules, sindex, midx, smi_of, weights, procs=4, log=print):
+def predict(molecules, sindex, midx, smi_of, weights, procs=4, log=print, limit=TOPN):
     """molecules: list of dict(id, spectra=[(mz, it, adduct, precursor_mz, mode)]).
     Returns {id: [candidate keys, best first]} -- map keys to SMILES with smi_of."""
     prepared = []
@@ -273,5 +303,5 @@ def predict(molecules, sindex, midx, smi_of, weights, procs=4, log=print):
              for h, _ in sorted(spec.items(), key=lambda kv: (-kv[1], kv[0]))[:NB_TOP]}
     info = characterise(need, procs)
     log(f"  characterised {len(info):,} structures")
-    return {mid: rank(features(q, cands, spec, info, smi_of), spec, cands, weights)
+    return {mid: rank(features(q, cands, spec, info, smi_of), spec, cands, weights, limit)
             for mid, q, cands, spec in prepared}

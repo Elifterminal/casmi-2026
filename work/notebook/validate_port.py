@@ -40,7 +40,7 @@ def main():
     smi_of = lambda k: trs.get(k) or cos_.get(k, "")          # training SMILES win, as in E17
     print(f"loaded {time.time()-t0:.0f}s", flush=True)
 
-    ok = True
+    ok = True; got_all, ded_all = [], []
     for split, want in zip(EVAL, expect):
         sp = json.load(open(os.path.join(SPLITS, f"split_{split}.json")))
         ref_rows = np.load(os.path.join(SPLITS, f"ref_rows_{split}.npy"))
@@ -50,17 +50,33 @@ def main():
         midx = cp.MassIndex(co.k[keep].to_numpy(), co.m[keep].to_numpy())
         mols = [dict(id=k, spectra=[(*peaks(r), add[r], pmz[r], mode[r]) for r in rows])
                 for k, rows in sp["query_rows"].items()]
-        pred = cp.predict(mols, sindex, midx, smi_of, weights, procs=7, log=lambda m: print(f"[{split}]{m}", flush=True))
-        rr = {1: [], 2: [], 3: []}
+        # limit=50 so the submission layer can drop scorer-duplicate guesses and still fill 25
+        pred = cp.predict(mols, sindex, midx, smi_of, weights, procs=7, limit=50,
+                          log=lambda m: print(f"[{split}]{m}", flush=True))
+        rr = {1: [], 2: [], 3: []}; rrd = {1: [], 2: [], 3: []}
         for k, c in sp["assign"].items():
-            truth = scoring.key14(truth_smi[k]); r = 0.0
-            for i, cand in enumerate(pred[k], 1):
-                if truth is not None and scoring.key14(smi_of(cand)) == truth: r = 1.0 / i; break
-            rr[c].append(r)
+            truth = scoring.key14(truth_smi[k])
+            cand_keys = [scoring.key14(smi_of(cand)) for cand in pred[k]]   # NOT `keys`: that's the
+            plain = cand_keys[:cp.TOPN]                                     # training key array
+            seen, dedup = set(), []                      # keep first of each scorer-identical guess
+            for kk in cand_keys:
+                if kk in seen: continue
+                seen.add(kk); dedup.append(kk)
+                if len(dedup) == cp.TOPN: break
+            for lst, acc in ((plain, rr), (dedup, rrd)):
+                r = 0.0
+                for i, kk in enumerate(lst, 1):
+                    if truth is not None and kk == truth: r = 1.0 / i; break
+                acc[c].append(r)
         got = sum(W[c] * np.mean(rr[c]) for c in (1, 2, 3))
+        gotd = sum(W[c] * np.mean(rrd[c]) for c in (1, 2, 3))
         match = abs(got - want) < 1e-9; ok &= match
-        print(f"[{split}] weighted {got:.6f}   E18 {want:.6f}   {'MATCH' if match else 'MISMATCH'}   {time.time()-t0:.0f}s", flush=True)
-    print("\nRESULT:", "PORT EQUIVALENT to E18" if ok else "PORT DIFFERS from E18")
+        got_all.append(got); ded_all.append(gotd)
+        print(f"[{split}] weighted {got:.6f}   E18 {want:.6f}   {'MATCH' if match else 'MISMATCH'}"
+              f"   | dedup {gotd:.6f} ({gotd-got:+.6f})   {time.time()-t0:.0f}s", flush=True)
+    print(f"\n3-split mean: as-ranked {np.mean(got_all):.4f}   deduplicated {np.mean(ded_all):.4f} "
+          f"({np.mean(ded_all)-np.mean(got_all):+.4f})")
+    print("RESULT:", "PORT EQUIVALENT to E18" if ok else "PORT DIFFERS from E18")
 
 
 if __name__ == "__main__":
