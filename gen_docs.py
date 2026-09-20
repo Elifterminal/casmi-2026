@@ -572,6 +572,22 @@ def build_inner(m):
              'untouched at exactly zero. Those are two specific, measured reasons, not optimism. If '
              'Class 3 work lands and the leaderboard does not move, that is a flat signal and the '
              'gate applies.</div>')
+    p.append('<h2>Kill gate v2 &mdash; declared 20 September</h2>')
+    p.append('<div class="q"><b>v1 failed on its leaderboard arm and is not being reinterpreted.</b> '
+             'It required beating 0.339 on both honest validation and the public board. Local cleared '
+             '(0.351); the board did not (0.283). Seda\'s review made the point that reasons for '
+             'continuing, however good, are exactly what a predeclared gate exists to resist. So v1 is '
+             'recorded as failed and replaced, in public, by a rule with the same binding force:'
+             '<br><br><b>By 11 October</b> &mdash; three weeks &mdash; a real Class 3 attempt must be '
+             'built, measured locally, and <b>submitted to the leaderboard</b>.<br>'
+             '<b>Threshold: the board must read 0.31 or better.</b> That is +0.027 on 0.283, roughly '
+             'what a Class 3 MRR of 0.09 is worth at 39% weight through the 0.8 local-to-board '
+             'conversion. It is deliberately low: it asks the work to show up at all, not to win.<br>'
+             '<b>If it reads below 0.31, we stop.</b> No fourth month, no further reinterpretation.<br>'
+             '<b>Separately</b>, if 5th place passes 0.45 before then, the paying finish is out of '
+             'reach from 0.283 and we stop regardless of our own progress.<br><br>'
+             'No escape clauses. If a scoring bug in our own harness invalidates the reading, that '
+             'becomes a v3 declared in the open, with its reasoning, and judged as such.</div>')
     p.append('<h2>What worries me now</h2>')
     p.append('<p><b>The bar is moving faster than we are.</b> The leader was at 0.353 when we picked '
              'this competition on 17 September and is at 0.396 three days later. Fifth place &mdash; '
