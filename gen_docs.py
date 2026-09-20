@@ -52,6 +52,7 @@ button.tab:hover{background:var(--code);color:var(--fg)}
 button.tab.active{color:var(--fg);border-bottom-color:var(--accent);font-weight:600}
 .panel{display:none}.panel.active{display:block}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:18px 0}
+.upd{color:var(--mut);font-size:.92em;font-style:italic;margin:2px 0 14px}
 .read{border-left:4px solid var(--accent);background:var(--code);padding:13px 16px;
  border-radius:0 8px 8px 0;margin:14px 0;font-size:14.2px}
 .read.warn{border-left-color:var(--warn)}
@@ -393,13 +394,57 @@ def build_inner(m):
     p.append('<div class="q"><b>The thesis in one line.</b> The money is not in being a better mass '
              'spectrometrist. It is in Class 2, and in being the only team with a number it can '
              'trust.</div>')
+    p.append('<h2 id="thesis-now">What the three classes actually pay, measured</h2>')
+    p.append('<p class="upd">Updated 20 September. Everything above was written on 17 September, '
+             'before any experiment. It is kept as written; this is what the numbers turned out to '
+             'be once we had an honest harness and a leaderboard score.</p>')
+    p.append('<table><thead><tr><th>Class</th><th>Then (assumed)</th><th>Now (measured)</th>'
+             '</tr></thead><tbody>'
+             '<tr><td><span class="tag ok">Class 1</span></td><td>~0.93, basically solved</td>'
+             '<td><b>0.81</b> with the learned ranker, but only <b>0.39</b> on fragment score alone. '
+             'Matching is easy when the pool is small; in a real 36-deep natural-product pool it is '
+             'not free.</td></tr>'
+             '<tr><td><span class="tag warn">Class 2</span></td><td>the unclaimed 45%</td>'
+             '<td><b>0.49</b>. Still the biggest block we actually score on, and it moved the most '
+             '(0.39 &rarr; 0.49 when the ranker stopped relying on peak counting alone).</td></tr>'
+             '<tr><td><span class="tag bad">Class 3</span></td><td>roughly nothing, for everybody</td>'
+             '<td><b>exactly 0.000</b>. Untouched, and 39% of the score. The small non-zero values we '
+             'reported before L-023 were a leak in our own harness, not signal.</td></tr>'
+             '</tbody></table>')
+    p.append('<div class="read warn"><b>The 0.61 ceiling above assumed Classes 1 and 2 solved '
+             'perfectly.</b> We are at 0.81 and 0.49 on them, which is where our 0.351 local / '
+             '<b>0.283 leaderboard</b> comes from. The shape of the thesis held &mdash; Class 2 is '
+             'where the movable points were, and ranking beat matching &mdash; but &ldquo;nearly '
+             'solved&rdquo; was doing a lot of work in the original claim.</div>')
+    p.append('<div class="q"><b>And the part of the thesis that paid off.</b> The field&rsquo;s local '
+             'scores collapse by about 0.20 on the leaderboard. Ours fell by <b>0.068</b>. Being the '
+             'team with a number it can trust was the real edge, and it survived contact.</div>')
     p.append('</div>')
 
     # ---------------- plan ----------------
     p.append(pnl('plan'))
     p.append('<h2>Four phases</h2>')
-    p.append('<p>Nothing here has been run yet. This is the plan as written on 17 September, before '
-             'entry.</p>')
+    p.append('<p>This is the plan as written on 17 September, before entry. It is left as written. '
+             'The box below is what actually happened to each phase, updated 20 September.</p>')
+    p.append('<div class="read"><b>Where each phase ended up.</b><br>'
+             '<b>Phase 1 &mdash; done, then done again.</b> The honest harness was built (E02) and '
+             'later found to be leaking through tautomer twins (L-023): we held out by InChIKey14 '
+             'while the scorer canonicalises tautomers first. Rebuilt twin-safe, with controls that '
+             'fail when a twin is re-inserted. This phase was right about being the whole game and '
+             'still took two goes.<br>'
+             '<b>Phase 2 &mdash; done, and it is what we submitted.</b> Retrieval from COCONUT, '
+             'ranked by a learned combination of fragment explanation and a neighbour vote (L-022). '
+             'The prediction that bigger pools hurt was correct: COCONUT alone beats COCONUT plus the '
+             'training structures. The prediction that the instrument/chemistry domain split would '
+             'pay has <b>not been tested</b>.<br>'
+             '<b>Phase 3 &mdash; not started.</b> Class 3 is still exactly zero. E12/E13 measured its '
+             'ceiling instead: a good relative is reachable for 24% of Class 3 with plain cosine '
+             'search, 46% with modified-cosine and neutral-loss search. That is the next block of '
+             'work.<br>'
+             '<b>Phase 4 &mdash; partly, and it mattered less than expected.</b> Merging the channels '
+             'was explored across E08&ndash;E10; the answer was that fragment score alone ranks best '
+             'and adding spectral score to it <i>lowers</i> the total. The only slot-level win left '
+             'was dropping duplicate guesses.</div>')
 
     p.append('<div class="phase"><span class="pn">Phase 1</span>'
              '<h3>Build an honest scoreboard before writing a single model</h3>'
@@ -516,6 +561,28 @@ def build_inner(m):
              'cannot clear a free public notebook, the headroom is not reachable from where we are '
              'standing and we stop.<br><br>Same rule that retired the ROGII entry rather than grinding '
              'it. No three-month grind on a flat signal.</div>')
+    p.append('<h2>The kill gate, answered</h2>')
+    p.append('<div class="read warn"><b>Updated 20 September.</b> Both arms are now in. Local '
+             'validation <b>cleared</b> 0.339 (0.351, three splits of three). The leaderboard '
+             '<b>did not</b>: <b>0.283</b>, rank 389 of 918.<br><br>'
+             '<b>We are continuing anyway, and the reason should be on the record so it can be judged '
+             'later.</b> The gate was written to stop a three-month grind on a flat signal. The signal '
+             'is not flat: the gap between our local number and the leaderboard is 0.068 where the '
+             'field&rsquo;s is about 0.20, and 39% of the score (Class 3) is still completely '
+             'untouched at exactly zero. Those are two specific, measured reasons, not optimism. If '
+             'Class 3 work lands and the leaderboard does not move, that is a flat signal and the '
+             'gate applies.</div>')
+    p.append('<h2>What worries me now</h2>')
+    p.append('<p><b>The bar is moving faster than we are.</b> The leader was at 0.353 when we picked '
+             'this competition on 17 September and is at 0.396 three days later. Fifth place &mdash; '
+             'the last paying slot &mdash; is 0.363. We are at 0.283. Standing still loses ground, and '
+             'this is the risk I would weight highest.</p>')
+    p.append('<p><b>The class mix is still unverified.</b> Every weighted number we quote uses '
+             '16/45/39, reverse-engineered by a competitor. If Class 3 is a larger share than that, '
+             'our score is lower than we think and the Class 3 work matters more.</p>')
+    p.append('<p><b>One leaderboard reading is one reading.</b> The public leaderboard is a fraction '
+             'of the test set. 0.283 is a noisy estimate, and the 0.8 local-to-leaderboard conversion '
+             'we are now using to steer is built on a single point.</p>')
     p.append('<h2>About the lock on this page</h2>')
     p.append('<p>The gate is real encryption, not a JavaScript curtain. The document is encrypted with '
              'a random key; that key is then wrapped separately under each credential using PBKDF2 at '
