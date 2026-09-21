@@ -5,3 +5,18 @@
 [  665s] [nptsseed21_n300] 283 queries, 55,575 structures characterised
 [  765s] [nptsseed22_n300] 287 queries, 77,933 structures characterised
 [  781s] features built; fitting arms
+[ 2204s]   explain      weighted 0.3682
+[ 2209s]   loss_pairs   weighted 0.3674
+[ 2210s]   both         weighted 0.3674
+E31 — relations between peaks, not the list of masses
+
+arm                C1       C2       C3  weighted  vs explain
+explain        0.8245   0.5250   0.0000    0.3682     +0.0000
+loss_pairs     0.8245   0.5233   0.0000    0.3674     -0.0008
+both           0.8245   0.5233   0.0000    0.3674     -0.0008
+
+loss_pairs   -0.0008  95% CI [-0.0027, +0.0013]
+both         -0.0008  95% CI [-0.0028, +0.0011]
+
+learned weight on loss_pairs in the 'both' arm: -0.6711
+runtime 2211s
