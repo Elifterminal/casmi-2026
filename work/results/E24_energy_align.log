@@ -1,0 +1,24 @@
+loaded 22s
+[nptsseed10_n300] 275,542 reference structures 23s
+[nptsseed10_n300]  100/300 30s
+[nptsseed10_n300]  200/300 35s
+[nptsseed10_n300]  300/300 40s
+[nptsseed11_n300] 275,546 reference structures 41s
+[nptsseed11_n300]  100/300 48s
+[nptsseed11_n300]  300/300 57s
+[nptsseed12_n300] 275,537 reference structures 58s
+[nptsseed12_n300]  100/300 66s
+[nptsseed12_n300]  200/300 71s
+E24 — pooled vs energy-aligned relative search, 756 Class 2/3 queries
+
+reference series length: median 6 frames
+
+method         median best Tanimoto@5     mean    >=0.6    >=0.4
+pooled_cos                     0.3694   0.4447    33.9%    47.6%
+pooled_fr                      0.4313   0.4731    37.3%    51.9%
+aligned_fr                     0.3565   0.4400    32.8%    47.1%
+
+pooled_fr    vs pooled_cos: mean Tanimoto +0.0285  95% CI [+0.0156, +0.0420]   <- clears zero
+aligned_fr   vs pooled_cos: mean Tanimoto -0.0047  95% CI [-0.0199, +0.0099]
+
+runtime 75s
