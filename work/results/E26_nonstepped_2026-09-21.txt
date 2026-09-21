@@ -1,0 +1,13 @@
+E26 — alignment on NON-STEPPED spectra only, 361 Class 2/3 queries
+
+reference series length: median 6 frames
+
+method         median best Tanimoto@5     mean    >=0.6    >=0.4
+pooled_cos                     0.2979   0.4014    29.1%    42.7%
+pooled_fr                      0.4000   0.4415    31.9%    50.1%
+aligned_fr                     0.3000   0.4002    27.4%    43.5%
+
+pooled_fr    vs pooled_cos: mean Tanimoto +0.0402  95% CI [+0.0165, +0.0642]   <- clears zero
+aligned_fr   vs pooled_cos: mean Tanimoto -0.0012  95% CI [-0.0218, +0.0194]
+
+runtime 59s
