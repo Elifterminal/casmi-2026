@@ -1,5 +1,5 @@
 {
-  "source": "E18 learned pairwise LR, twin-safe NP splits nptsseed20-22, COCONUT pools",
+  "source": "E23: retrieval + analog generation, relatives from cosine/modcos/nlcos, trained on twin-safe NP splits 20-22, evaluated 0.3663 weighted",
   "features": [
     "explain",
     "chance_corr",
@@ -7,15 +7,20 @@
     "nb_max",
     "nb_mean10",
     "spec_self",
-    "heavy"
+    "heavy",
+    "is_generated"
   ],
   "weights": {
-    "explain": -21.50185622494277,
-    "chance_corr": 25.137596968823196,
-    "single": 5.036571427550288,
-    "nb_max": 7.012714685378833,
-    "nb_mean10": 13.707949151926572,
-    "spec_self": -0.6561734373399128,
-    "heavy": -0.02158052846319766
-  }
+    "explain": -24.270155617393552,
+    "chance_corr": 27.25966837726914,
+    "single": 5.025146336538364,
+    "nb_max": 6.110824019761448,
+    "nb_mean10": 15.344125421730073,
+    "spec_self": -0.4143400760586137,
+    "heavy": -0.0521810137095121,
+    "is_generated": -0.10889061283703047
+  },
+  "generation_recall_c3": 0.1737891737891738,
+  "generate": false,
+  "note": "generation OFF for this version: A/B against submission 2 (0.260 with generation, 0.283 without on the previous ranker)"
 }

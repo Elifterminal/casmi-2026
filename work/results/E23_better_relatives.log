@@ -1,0 +1,34 @@
+[   19s] data loaded
+[   97s] [nptsseed10_n300] spectral index for relative search
+[  123s] [nptsseed10_n300] relatives found (median 23 per query)
+[  269s] [nptsseed10_n300] 300 queries, 1,337 generated, 32,381 structures characterised
+[  353s] [nptsseed11_n300] spectral index for relative search
+[  378s] [nptsseed11_n300] relatives found (median 22 per query)
+[  492s] [nptsseed11_n300] 300 queries, 1,595 generated, 33,626 structures characterised
+[  576s] [nptsseed12_n300] spectral index for relative search
+[  601s] [nptsseed12_n300] relatives found (median 22 per query)
+[  741s] [nptsseed12_n300] 300 queries, 1,390 generated, 31,898 structures characterised
+[  824s] [nptsseed20_n300] spectral index for relative search
+[  848s] [nptsseed20_n300] relatives found (median 22 per query)
+[  963s] [nptsseed20_n300] 284 queries, 1,644 generated, 32,968 structures characterised
+[ 1046s] [nptsseed21_n300] spectral index for relative search
+[ 1072s] [nptsseed21_n300] relatives found (median 22 per query)
+[ 1154s] [nptsseed21_n300] 283 queries, 1,438 generated, 31,510 structures characterised
+[ 1236s] [nptsseed22_n300] spectral index for relative search
+[ 1261s] [nptsseed22_n300] relatives found (median 22 per query)
+[ 1352s] [nptsseed22_n300] 287 queries, 1,275 generated, 31,704 structures characterised
+[ 2457s] trained on 44,581 truth/decoy pairs
+E23 — generation fed by cosine + modified-cosine + neutral-loss relatives
+
+generation recall on Class 3: 61/351 = 17.4%   (E22, cosine only: 8.8%)
+
+weights: explain -24.3, chance_corr +27.3, single +5.03, nb_max +6.11, nb_mean10 +15.3, spec_self -0.414, heavy -0.0522, is_generated -0.109
+
+variant                        C1       C2       C3  weighted
+retrieval only             0.8138   0.4926   0.0000    0.3519
+retrieval + generated      0.8126   0.4608   0.0742    0.3663
+
+generated vs retrieval only: +0.0144  95% CI [+0.0033, +0.0262]   <- clears zero
+E22 for comparison: 0.3591 weighted, C3 0.0311, recall 8.8%
+
+runtime 2995s

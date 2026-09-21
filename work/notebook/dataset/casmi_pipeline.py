@@ -20,6 +20,7 @@ from multiprocessing import Pool
 
 import numpy as np
 from rdkit import Chem, DataStructs, RDLogger
+from rdkit.Chem import Descriptors
 from rdkit.Chem import inchi, rdFingerprintGenerator
 from rdkit.Chem.MolStandardize import rdMolStandardize
 
@@ -32,6 +33,11 @@ PROTON, H = 1.00727646688, 1.007825032
 TOL, TOPPEAKS, MAX_HEAVY = 0.01, 30, 60
 NB_TOP = 50
 FEATS = ["explain", "chance_corr", "single", "nb_max", "nb_mean10", "spec_self", "heavy"]
+FEATS2 = FEATS + ["is_generated"]        # E23: retrieved and generated candidates, calibrated together
+MAX_EACH = 10                             # relatives kept per search method (cosine / modcos / nlcos)
+SLOW_ROWS, SLOW_REFS = 3, 300             # budget for the two expensive searches, per molecule
+NPK, MZ_TOL = 50, 0.01                    # peaks per spectrum, and the match window, for modcos/nlcos
+GAP_TOL, MAX_SITES = 0.003, 20            # matching a mass gap to an edit, and products per edit
 
 _E = {"C": 12.0, "H": 1.00782503207, "N": 14.0030740048, "O": 15.9949146196,
       "S": 31.97207100, "P": 30.97376163, "Cl": 34.96885268, "Br": 78.9183371,
@@ -237,6 +243,79 @@ def chance(frag, M) -> float:
     return min(1.0, 3 * len(frag) * 2 * TOL / M)
 
 
+# ---- relatives: three searches, because they find different molecules (E13) --------------
+def top_peaks(mz, it, n=NPK):
+    mz = np.asarray(mz, np.float64); it = np.asarray(it, np.float64)
+    if len(it) == 0 or it.max() <= 0: return np.empty(0), np.empty(0)
+    o = np.argsort(-it)[:n]; mz, it = mz[o], it[o]
+    w = np.sqrt(it); w /= np.linalg.norm(w) + 1e-12
+    s = np.argsort(mz)
+    return mz[s], w[s]
+
+
+def greedy_cos(qm, qw, rm, rw, shift=None):
+    """Greedy peak-matched cosine; with shift, a query peak may also match ref+shift."""
+    if len(qm) == 0 or len(rm) == 0: return 0.0
+    pairs = []
+    for off in ((0.0,) if shift is None else (0.0, shift)):
+        lo = np.searchsorted(rm + off, qm - MZ_TOL, "left"); hi = np.searchsorted(rm + off, qm + MZ_TOL, "right")
+        for i, (a, b) in enumerate(zip(lo, hi)):
+            for j in range(a, b): pairs.append((qw[i] * rw[j], i, j))
+    if not pairs: return 0.0
+    pairs.sort(reverse=True); ui, uj = set(), set(); s = 0.0
+    for sc, i, j in pairs:
+        if i in ui or j in uj: continue
+        ui.add(i); uj.add(j); s += sc
+    return s
+
+
+def find_relatives(spectra, spec, sindex, peaks, pmz, cache):
+    """Union of the top MAX_EACH structures from cosine, modified-cosine and neutral-loss search."""
+    cos_hits = [h for h, _ in sorted(spec.items(), key=lambda kv: (-kv[1], kv[0]))[:MAX_EACH]]
+    mod, nl = defaultdict(float), defaultdict(float)
+    for mz, it, _, qp, _ in spectra[:SLOW_ROWS]:
+        b, w = prep(mz, it); o = np.argsort(b); b, w = b[o], w[o]
+        if len(b) == 0: continue
+        gather = [sindex.inv[int(bb)] for bb in np.unique(b[np.argsort(-w)[:IDX_PEAKS]]) if int(bb) in sindex.inv]
+        if not gather: continue
+        u, ct = np.unique(np.concatenate(gather), return_counts=True)
+        qm, qw = top_peaks(mz, it); qnl = top_peaks(np.asarray(qp) - np.asarray(mz), it)
+        for c in u[np.argsort(-ct)[:SLOW_REFS]]:
+            if c not in cache:
+                cache[c] = (top_peaks(*peaks(c)), top_peaks(pmz[c] - peaks(c)[0], peaks(c)[1]))
+            (rm, rw), rnl = cache[c]
+            kc = sindex.keys[c]
+            mod[kc] = max(mod[kc], greedy_cos(qm, qw, rm, rw, shift=qp - pmz[c]))
+            nl[kc] = max(nl[kc], greedy_cos(*qnl, *rnl))
+    pick = list(cos_hits)
+    for d in (mod, nl):
+        pick += [h for h, _ in sorted(d.items(), key=lambda kv: (-kv[1], kv[0]))[:MAX_EACH]]
+    seen, rel = set(), []
+    for h in pick:
+        if h in seen: continue
+        seen.add(h); rel.append(h)
+    return rel
+
+
+def generate(relatives, M, smi_of, exact_cache, pool=None):
+    """Edit each relative to close the mass gap; returns the distinct product SMILES."""
+    from e20_edits import candidates_for
+    jobs = []
+    for h in relatives:
+        smi = smi_of(h)
+        if not smi: continue
+        if smi not in exact_cache:
+            m = Chem.MolFromSmiles(smi)
+            exact_cache[smi] = Descriptors.ExactMolWt(m) if m is not None else float("nan")
+        rm = exact_cache[smi]
+        if not np.isfinite(rm) or not np.isfinite(M) or abs(M - rm) < 1e-6: continue
+        jobs.append((smi, M - rm))
+    out = set()
+    for smi, gap in jobs:
+        out.update(s for s, _ in candidates_for(smi, gap, tol=GAP_TOL, max_sites=MAX_SITES))
+    return sorted(out)
+
+
 # ---- one molecule ---------------------------------------------------------------------
 def features(q, cands, spec, info, smi_of):
     """q: dict(allmz, allit, positive, M). Returns {cand_key: feature dict}."""
@@ -267,6 +346,47 @@ def rank(feats, spec, cands, weights, limit=TOPN):
     sc = {c: float(np.dot(w, [f[x] for x in FEATS])) for c, f in feats.items()}
     ranked = sorted(sc, key=lambda c: (-sc[c], c))
     return (ranked + sorted(set(spec) - set(cands))[:limit])[:limit]
+
+
+def features2(q, cands, gen, spec, info, smi_of):
+    """Feature vectors for both channels: retrieved candidates and generated ones (E23)."""
+    hits = sorted(spec.items(), key=lambda kv: (-kv[1], kv[0]))[:NB_TOP]
+    good = [(h, c) for h, c in hits if info.get(smi_of(h)) is not None]
+    hfp = [info[smi_of(h)]["fp"] for h, _ in good]
+    hcos = np.array([c for _, c in good])
+
+    def vec(smi, spec_self, is_gen):
+        inf = info.get(smi)
+        if inf is None: return None
+        e = explain(q["allmz"], q["allit"], inf["full"], q["positive"])
+        if hfp:
+            v = hcos * np.array(DataStructs.BulkTanimotoSimilarity(inf["fp"], hfp))
+            nbm, nb10 = float(v.max()), float(v[:10].mean())
+        else:
+            nbm = nb10 = 0.0
+        f = dict(explain=e, chance_corr=e - chance(inf["full"], q["M"]),
+                 single=explain(q["allmz"], q["allit"], inf["single"], q["positive"]),
+                 nb_max=nbm, nb_mean10=nb10, spec_self=spec_self, heavy=inf["heavy"],
+                 is_generated=float(is_gen))
+        return np.array([f[x] for x in FEATS2])
+
+    out = {}
+    for c in cands:
+        v = vec(smi_of(c), spec.get(c, 0.0), 0)
+        if v is not None: out[c] = (v, smi_of(c))
+    for smi in gen:
+        v = vec(smi, 0.0, 1)
+        if v is not None: out[f"gen:{smi}"] = (v, smi)
+    return out
+
+
+def rank2(cand, spec, cands, weights, limit=TOPN):
+    """Rank both channels together, then spectral-only hits; duplicates dropped by scorer key."""
+    w = np.array([weights[f] for f in FEATS2])
+    sc = {c: float(np.dot(w, v)) for c, (v, _) in cand.items()}
+    order = [cand[c][1] for c in sorted(sc, key=lambda c: (-sc[c], c))]
+    order += [None] * 0
+    return order, sorted(set(spec) - set(cands))[:limit]
 
 
 def characterise(smiles, procs=4, cache=None):
@@ -305,3 +425,88 @@ def predict(molecules, sindex, midx, smi_of, weights, procs=4, log=print, limit=
     log(f"  characterised {len(info):,} structures")
     return {mid: rank(features(q, cands, spec, info, smi_of), spec, cands, weights, limit)
             for mid, q, cands, spec in prepared}
+
+
+def _gen_job(args):
+    from e20_edits import candidates_for
+    smi, gap = args
+    return [s for s, _ in candidates_for(smi, gap, tol=GAP_TOL, max_sites=MAX_SITES)]
+
+
+def predict2(molecules, sindex, midx, smi_of, weights, peaks, pmz, procs=4, log=print, limit=TOPN,
+             generate=True):
+    """E23 pipeline: retrieval + analog generation, ranked together.
+
+    molecules: list of dict(id, spectra=[(mz, it, adduct, precursor_mz, mode)]).
+    Returns {id: [SMILES, best first]} -- already deduplicated by the scorer's key.
+    """
+    prepared, jobs, exact = [], [], {}
+    tpc = {}
+    for m in molecules:
+        sp = m["spectra"]
+        spec = sindex.hits([(mz, it) for mz, it, *_ in sp])
+        cands, Ms = set(), []
+        for mz, it, add, p_, mode in sp:
+            M = neutral_mass(p_, add)
+            if np.isfinite(M) and M > 0: cands.update(midx.window(M).tolist()); Ms.append(M)
+        M = float(np.median(Ms)) if Ms else np.nan
+        q = dict(allmz=np.concatenate([np.asarray(s[0], np.float32) for s in sp]),
+                 allit=np.concatenate([np.asarray(s[1], np.float32) for s in sp]),
+                 positive=str(sp[0][4]).lower().startswith("pos"), M=M)
+        # generate=False is the A/B arm: identical ranking, generation channel switched off.
+        # Local: 0.3663 with generation, 0.3519 without (E23).
+        rel = find_relatives(sp, spec, sindex, peaks, pmz, tpc) if (generate and np.isfinite(M)) else []
+        pend = []
+        for h in rel:
+            smi = smi_of(h)
+            if not smi: continue
+            if smi not in exact:
+                mm = Chem.MolFromSmiles(smi)
+                exact[smi] = Descriptors.ExactMolWt(mm) if mm is not None else float("nan")
+            rm = exact[smi]
+            if np.isfinite(rm) and abs(M - rm) > 1e-6: pend.append((smi, M - rm))
+        jobs.append(pend)
+        prepared.append((m["id"], q, cands, spec))
+    log(f"  relatives + pools for {len(prepared)} molecules")
+
+    flat = []
+    allj = [j for pend in jobs for j in pend]
+    if allj:
+        if procs > 1:
+            with Pool(procs) as pool: flat = pool.map(_gen_job, allj, chunksize=4)
+        else:
+            flat = [_gen_job(j) for j in allj]
+    gen_per, i = [], 0
+    for pend in jobs:
+        got = set()
+        for _ in pend: got.update(flat[i]); i += 1
+        gen_per.append(sorted(got))
+    log(f"  generated {sum(len(g) for g in gen_per):,} candidates")
+
+    need = {smi_of(c) for _, _, cands, _ in prepared for c in cands}
+    need |= {smi_of(h) for *_, spec in prepared
+             for h, _ in sorted(spec.items(), key=lambda kv: (-kv[1], kv[0]))[:NB_TOP]}
+    need |= {s for g in gen_per for s in g}
+    info = characterise(need, procs)
+    log(f"  characterised {len(info):,} structures")
+
+    w = np.array([weights[f] for f in FEATS2])
+    out = {}
+    for (mid, q, cands, spec), gen in zip(prepared, gen_per):
+        cand = features2(q, cands, gen, spec, info, smi_of)
+        sc = {c: float(np.dot(w, v)) for c, (v, _) in cand.items()}
+        order = [cand[c][1] for c in sorted(sc, key=lambda c: (-sc[c], c))]
+        # tail = spectral-only hits, drawn from the SAME top-NB_TOP window the features use.
+        # Drawing from every spectral hit instead differs from E23 by 7e-5 on Class 1 (caught by
+        # validate_port2.py) -- small, but the port must match the experiment exactly.
+        top_hits = dict(sorted(spec.items(), key=lambda kv: (-kv[1], kv[0]))[:NB_TOP])
+        order += [smi_of(c) for c in sorted(set(top_hits) - set(cands))[:limit]]
+        seen, keep = set(), []
+        for smi in order:
+            k = key14(smi)
+            if k is not None and k in seen: continue
+            if k is not None: seen.add(k)
+            keep.append(smi)
+            if len(keep) == limit: break
+        out[mid] = keep
+    return out
