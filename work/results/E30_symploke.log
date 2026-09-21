@@ -1,0 +1,26 @@
+loaded 23s
+[nptsseed10_n300] 275,542 reference structures 24s
+[nptsseed10_n300]  100/300 38s
+[nptsseed10_n300]  200/300 52s
+[nptsseed11_n300] 275,546 reference structures 67s
+[nptsseed11_n300]  100/300 90s
+[nptsseed12_n300] 275,537 reference structures 114s
+[nptsseed12_n300]  200/300 145s
+E30 — Symploke: the (m/z x energy) joint against the product of its marginals
+
+molecules with >=2 single-energy spectra: 361   (median 5 frames)
+
+surplus e (Fisher-Rao, scale 0..pi):
+  real          median 1.6146   mean 1.5409   90th pct 2.1344
+  permuted null median 1.6514   mean 1.5640
+  paired difference (real - null): mean -0.0232
+
+does the surplus predict where aligning beat pooling?
+  molecules with both measured: 361
+  correlation(e, alignment benefit) r = -0.0096
+  alignment benefit, high-surplus half: -0.0289
+  alignment benefit, low-surplus half:  -0.0546
+
+real vs null: -0.0232  95% CI [-0.0430, -0.0035]   <- indistinguishable from noise
+
+runtime 157s
