@@ -1,0 +1,12 @@
+E34 — timsTOF natural-product queries: the only set matching the test on both axes
+
+queries: 720   (C1 114, C2 324, C3 282)
+
+set                                      C1       C2       C3  weighted
+timsTOF NP (test-faithful)           0.8626   0.5798   0.0000    0.3989
+mixed-instrument NP (our usual)      0.8245   0.5250   0.0000    0.3682
+
+difference: +0.0307 weighted
+leaderboard for this pipeline: 0.288
+
+runtime 1717s

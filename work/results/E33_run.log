@@ -1,0 +1,41 @@
+[  149s] [nptsseed10_n300] 300 queries, 0 generated, 30,936 structures characterised
+[  264s] [nptsseed11_n300] 300 queries, 0 generated, 31,949 structures characterised
+[  406s] [nptsseed12_n300] 300 queries, 0 generated, 30,410 structures characterised
+[  522s] [nptsseed20_n300] 284 queries, 0 generated, 31,284 structures characterised
+[  605s] [nptsseed21_n300] 283 queries, 0 generated, 29,844 structures characterised
+[  699s] [nptsseed22_n300] 287 queries, 0 generated, 30,314 structures characterised
+[ 2060s]   fr (production)  weighted 0.3682  (trained on 37,436 pairs)
+[ 2079s] [nptsseed10_n300] 300 queries, 0 generated, 31,047 structures characterised
+[ 2107s] [nptsseed11_n300] 300 queries, 0 generated, 31,913 structures characterised
+[ 2134s] [nptsseed12_n300] 300 queries, 0 generated, 30,433 structures characterised
+[ 2161s] [nptsseed20_n300] 284 queries, 0 generated, 31,312 structures characterised
+[ 2186s] [nptsseed21_n300] 283 queries, 0 generated, 29,898 structures characterised
+[ 2213s] [nptsseed22_n300] 287 queries, 0 generated, 30,333 structures characterised
+[ 2233s]   fr_agg           weighted 0.3683  (trained on 37,436 pairs)
+[ 2253s] [nptsseed10_n300] 300 queries, 0 generated, 31,035 structures characterised
+[ 2281s] [nptsseed11_n300] 300 queries, 0 generated, 31,932 structures characterised
+[ 2308s] [nptsseed12_n300] 300 queries, 0 generated, 30,470 structures characterised
+[ 2334s] [nptsseed20_n300] 284 queries, 0 generated, 31,308 structures characterised
+[ 2359s] [nptsseed21_n300] 283 queries, 0 generated, 29,937 structures characterised
+[ 2386s] [nptsseed22_n300] 287 queries, 0 generated, 30,382 structures characterised
+[ 2406s]   chi2             weighted 0.3682  (trained on 37,436 pairs)
+[ 2426s] [nptsseed10_n300] 300 queries, 0 generated, 31,035 structures characterised
+[ 2453s] [nptsseed11_n300] 300 queries, 0 generated, 31,952 structures characterised
+[ 2480s] [nptsseed12_n300] 300 queries, 0 generated, 30,463 structures characterised
+[ 2507s] [nptsseed20_n300] 284 queries, 0 generated, 31,335 structures characterised
+[ 2532s] [nptsseed21_n300] 283 queries, 0 generated, 29,940 structures characterised
+[ 2559s] [nptsseed22_n300] 287 queries, 0 generated, 30,396 structures characterised
+[ 2570s]   eshift           weighted 0.3696  (trained on 37,436 pairs)
+E33 — chi2 and the edit-shift quotient, end to end
+
+arm                    C1       C2       C3  weighted  vs fr_agg
+fr (production)    0.8245   0.5250   0.0000    0.3682    -0.0001
+fr_agg             0.8198   0.5270   0.0000    0.3683    +0.0000
+chi2               0.8333   0.5220   0.0000    0.3682    -0.0001
+eshift             0.8208   0.5294   0.0000    0.3696    +0.0012
+
+fr (production)  vs fr_agg: -0.0001  95% CI [-0.0031, +0.0028]
+chi2             vs fr_agg: -0.0001  95% CI [-0.0044, +0.0042]
+eshift           vs fr_agg: +0.0012  95% CI [-0.0023, +0.0048]
+
+runtime 2571s

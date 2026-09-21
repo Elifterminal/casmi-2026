@@ -49,7 +49,7 @@ def load_meta():
     return pq.read_table(DATA, columns=META).to_pandas()
 
 
-def build(df, n_query=900, seed=0, only=None, canon=None):
+def build(df, n_query=900, seed=0, only=None, canon=None, only_lib=None):
     rng = np.random.default_rng(seed)
 
     # candidate query structures: NP-ish, in the test's mass range, not absurdly
@@ -62,6 +62,12 @@ def build(df, n_query=900, seed=0, only=None, canon=None):
         np_hits=("_np", "sum"),
         mz=("precursor_mz", "median"))
     eligible = per[(per.np_hits >= 1) & (per.mz.between(MASS_LO, MASS_HI)) & (per.n >= 2)]
+    if only_lib is not None:
+        # E34: the real test is 100% Bruker timsTOF while our eval queries were 0.2% timsTOF.
+        # Restricting query STRUCTURES and their query SPECTRA to one library lets us score on a
+        # set that matches the test on instrument as well as chemistry.
+        inlib = set(df.loc[df["ingest_lib"] == only_lib, "inchikey14"])
+        eligible = eligible[eligible.index.isin(inlib)]
     if only is not None:
         # E16: "NP library" isn't the same as natural product -- GNPS carries drugs and
         # synthetics. E15 showed those score far better than real NPs, flattering every
@@ -86,15 +92,21 @@ def build(df, n_query=900, seed=0, only=None, canon=None):
     cls = np.array([1] * n1 + [2] * n2 + [3] * (n_query - n1 - n2))
     rng.shuffle(cls)
     assign = dict(zip(keys, cls.tolist()))
+    dropped = []
 
     # pick which spectra form each query (the rest of that structure's spectra are
     # only ever visible for class 1).
     # groupby(...).indices gives key -> row positions in ONE pass; the previous
     # version rebuilt a 2.5m-row boolean mask per structure, which is quadratic.
-    groups = df.groupby("inchikey14").indices
+    groups_all = df.groupby("inchikey14").indices
+    groups = groups_all
+    if only_lib is not None:                    # draw query spectra from that library only
+        lib_rows = set(np.flatnonzero((df["ingest_lib"] == only_lib).to_numpy()))
+        groups = {k: np.array([r for r in v if r in lib_rows]) for k, v in groups_all.items()}
     query_rows = {}
     for k in keys:
         rows = groups[k]
+        if len(rows) == 0: continue
         cap = min(MAX_Q_SPECTRA, len(rows))
         if assign[k] == 1:
             # A class 1 molecule MUST keep at least one spectrum in the reference
@@ -102,10 +114,18 @@ def build(df, n_query=900, seed=0, only=None, canon=None):
             # demotes it to class 2 and the harness would then report class 1
             # performance while measuring class 2. Caught by verify() on the first
             # run: 7 of 48 class 1 queries had been fully consumed.
-            cap = min(cap, len(rows) - 1)
+            # With --only-lib the spectrum kept back may live in ANOTHER library, so only
+            # reserve one when this structure has no spectra outside the query library.
+            elsewhere = len(groups_all[k]) - len(rows)
+            if elsewhere <= 0:
+                cap = min(cap, len(rows) - 1)
+            if cap < 1:
+                dropped.append(k); continue
         take = int(rng.integers(1, cap + 1))
         query_rows[k] = rng.choice(rows, size=take, replace=False).tolist()
 
+    for k in dropped: assign.pop(k, None)      # structures that cannot satisfy their class
+    if dropped: print(f"  dropped {len(dropped)} structures that could not satisfy their class")
     return assign, query_rows
 
 
@@ -171,6 +191,8 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--np-coconut", action="store_true",
                     help="E16: query molecules only from structures natively in COCONUT")
+    ap.add_argument("--only-lib", default=None,
+                    help="E34: draw query structures and their query spectra from this library only")
     ap.add_argument("--legacy-inchikey", action="store_true",
                     help="pre-E17 behaviour: hold out by InChIKey14 only (reproduces old splits)")
     a = ap.parse_args()
@@ -185,7 +207,8 @@ def main():
         from twins import train_canon
         canon = train_canon(df)
         print(f"  twin-safe: {len(canon):,} structures, {len(set(canon.values())):,} scorer identities")
-    assign, query_rows = build(df, a.n_query, a.seed, coconut_keys() if a.np_coconut else None, canon)
+    assign, query_rows = build(df, a.n_query, a.seed, coconut_keys() if a.np_coconut else None,
+                               canon, a.only_lib)
     ref_rows, cand, queries = apply_split(df, assign, query_rows, canon)
 
     counts = pd.Series([c for c in assign.values()]).value_counts().sort_index()
@@ -213,7 +236,8 @@ def main():
     print("  ok  no query spectrum leaked into the reference index")
 
     os.makedirs(OUT, exist_ok=True)
-    tag = f"{'np' if a.np_coconut else ''}{'' if canon is None else 'ts'}seed{a.seed}_n{a.n_query}"
+    tag = (f"{'np' if a.np_coconut else ''}{'' if canon is None else 'ts'}"
+           f"{'tims' if a.only_lib == 'enveda-np-examples' else ''}seed{a.seed}_n{a.n_query}")
     c3 = {k for k, c in assign.items() if c == 3}
     db_exclude = sorted(expand(c3, canon) - c3)    # training-side twins of Class 3 answers
     with open(f"{OUT}/split_{tag}.json", "w") as fh:

@@ -1,0 +1,13 @@
+E33 — chi2 and the edit-shift quotient, end to end
+
+arm                    C1       C2       C3  weighted  vs fr_agg
+fr (production)    0.8245   0.5250   0.0000    0.3682    -0.0001
+fr_agg             0.8198   0.5270   0.0000    0.3683    +0.0000
+chi2               0.8333   0.5220   0.0000    0.3682    -0.0001
+eshift             0.8208   0.5294   0.0000    0.3696    +0.0012
+
+fr (production)  vs fr_agg: -0.0001  95% CI [-0.0031, +0.0028]
+chi2             vs fr_agg: -0.0001  95% CI [-0.0044, +0.0042]
+eshift           vs fr_agg: +0.0012  95% CI [-0.0023, +0.0048]
+
+runtime 2571s
