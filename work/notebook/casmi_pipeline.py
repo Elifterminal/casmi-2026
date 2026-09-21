@@ -91,7 +91,15 @@ class MassIndex:
 
 
 # ---- spectral index (e08) -------------------------------------------------------------
-def prep(mz, it):
+def prep(mz, it, sqrt_p=False):
+    """Bin a spectrum and normalise it for the dot product that follows.
+
+    sqrt_p=True is Vanta's ground (E24): treat the spectrum as a probability distribution over
+    bins and take its square root, which puts it on the unit sphere -- the dot product is then
+    the Bhattacharyya coefficient and the angle is Fisher-Rao distance. Note sqrt(p) is already
+    L2-normalised, since ||sqrt(p)||^2 = sum(p) = 1, so this is literally our own cosine applied
+    to square-rooted intensities. E24: finds better relatives, +0.029 mean Tanimoto.
+    """
     if len(mz) == 0: return np.empty(0, np.int32), np.empty(0, np.float32)
     it = np.asarray(it, np.float32); mz = np.asarray(mz, np.float64); mx = it.max()
     if mx <= 0: return np.empty(0, np.int32), np.empty(0, np.float32)
@@ -99,6 +107,7 @@ def prep(mz, it):
     if len(it) > MAX_PEAKS:
         top = np.argpartition(-it, MAX_PEAKS)[:MAX_PEAKS]; mz, it = mz[top], it[top]
     b = np.rint(mz / BIN).astype(np.int32)
+    if sqrt_p: it = np.sqrt(it)
     return b, (it / (np.linalg.norm(it) + 1e-12)).astype(np.float32)
 
 

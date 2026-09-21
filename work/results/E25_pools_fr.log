@@ -1,0 +1,36 @@
+[nptsseed10_n300] loaded 11s
+[nptsseed10_n300] indexes 93s
+[nptsseed10_n300]  100/300 114s
+[nptsseed10_n300]  200/300 135s
+[nptsseed10_n300]  300/300 157s
+[nptsseed10_n300] wrote /home/lee/casmi-2026/work/splits/pools_fr_nptsseed10_n300.pkl: 300 queries, mass pool median 11 max 388  runtime 157s
+[nptsseed11_n300] loaded 10s
+[nptsseed11_n300] indexes 91s
+[nptsseed11_n300]  100/300 113s
+[nptsseed11_n300]  200/300 133s
+[nptsseed11_n300]  300/300 157s
+[nptsseed11_n300] wrote /home/lee/casmi-2026/work/splits/pools_fr_nptsseed11_n300.pkl: 300 queries, mass pool median 11 max 232  runtime 157s
+[nptsseed12_n300] loaded 9s
+[nptsseed12_n300] indexes 90s
+[nptsseed12_n300]  100/300 115s
+[nptsseed12_n300]  200/300 137s
+[nptsseed12_n300]  300/300 158s
+[nptsseed12_n300] wrote /home/lee/casmi-2026/work/splits/pools_fr_nptsseed12_n300.pkl: 300 queries, mass pool median 10 max 367  runtime 158s
+[nptsseed20_n300] loaded 9s
+[nptsseed20_n300] indexes 90s
+[nptsseed20_n300]  100/300 115s
+[nptsseed20_n300]  200/300 132s
+[nptsseed20_n300]  300/300 152s
+[nptsseed20_n300] wrote /home/lee/casmi-2026/work/splits/pools_fr_nptsseed20_n300.pkl: 300 queries, mass pool median 11 max 413  runtime 152s
+[nptsseed21_n300] loaded 9s
+[nptsseed21_n300] indexes 90s
+[nptsseed21_n300]  100/300 112s
+[nptsseed21_n300]  200/300 137s
+[nptsseed21_n300]  300/300 160s
+[nptsseed21_n300] wrote /home/lee/casmi-2026/work/splits/pools_fr_nptsseed21_n300.pkl: 300 queries, mass pool median 12 max 274  runtime 161s
+[nptsseed22_n300] loaded 9s
+[nptsseed22_n300] indexes 93s
+[nptsseed22_n300]  100/300 119s
+[nptsseed22_n300]  200/300 141s
+[nptsseed22_n300]  300/300 166s
+[nptsseed22_n300] wrote /home/lee/casmi-2026/work/splits/pools_fr_nptsseed22_n300.pkl: 300 queries, mass pool median 10 max 411  runtime 166s

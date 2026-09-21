@@ -54,7 +54,7 @@ def _gen(args):
     return [s for s, _ in candidates_for(smi, gap, tol=GAP_TOL, max_sites=MAX_SITES)]
 
 
-def build(splits, st, excl_keys=frozenset(), log=print):
+def build(splits, st, excl_keys=frozenset(), log=print, pools_prefix="", generate=True):
     """Per query: {candidate_id: (feature vector, smiles)}, plus class and truth."""
     keys, pmz, add, tr, co, _ = st
     trs, cos_ = dict(zip(tr.k, tr.s)), dict(zip(co.k, co.s))
@@ -70,7 +70,7 @@ def build(splits, st, excl_keys=frozenset(), log=print):
     for split in splits:
         sp = json.load(open(f"{SPLITS}/split_{split}.json"))
         assign, qrows = sp["assign"], sp["query_rows"]
-        pools = {p["k"]: p for p in pickle.load(open(f"{SPLITS}/pools_{split}.pkl", "rb"))}
+        pools = {p["k"]: p for p in pickle.load(open(f"{SPLITS}/pools_{pools_prefix}{split}.pkl", "rb"))}
         keep = ~co.k.isin(db_exclusions(sp, tr, co))
         midx = MassIndex(co.k[keep].to_numpy(), co.m[keep].to_numpy())
         qs, jobs = [], []
@@ -82,7 +82,7 @@ def build(splits, st, excl_keys=frozenset(), log=print):
                 if np.isfinite(M) and M > 0: cands.update(midx.window(M, PPM).tolist()); Ms.append(M)
             M = float(np.median(Ms)) if Ms else np.nan
             pend = []
-            if np.isfinite(M):
+            if generate and np.isfinite(M):
                 for h, _ in sorted(p["spec"].items(), key=lambda kv: (-kv[1], kv[0]))[:MAX_REL]:
                     s = smi_db(h); rm = emass(s)
                     if np.isfinite(rm) and abs(M - rm) > 1e-6: pend.append((s, M - rm))

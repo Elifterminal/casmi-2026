@@ -26,14 +26,16 @@ from rdkit import RDLogger
 RDLogger.DisableLog("rdApp.*")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from candidates import formula_mass, neutral_mass, MassIndex
-from e08_unified import prep, cosine, IDX_PEAKS, N_RESCORE, PPM, TOPN
+from e08_unified import cosine, IDX_PEAKS, N_RESCORE, PPM, TOPN
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "notebook"))
+from casmi_pipeline import prep          # gained a sqrt_p option in E25
 import scoring
 
 DATA = os.path.expanduser("~/casmi-2026/work/data/train.parquet")
 SPLITS = os.path.expanduser("~/casmi-2026/work/splits")
 
 
-def main(split):
+def main(split, sqrt_p=False):
     t0 = time.time()
     sp = json.load(open(f"{SPLITS}/split_{split}.json"))
     assign, qrows = sp["assign"], sp["query_rows"]
@@ -55,7 +57,7 @@ def main(split):
 
     prepped = {}
     for r in ref_rows:
-        b, w = prep(*peaks(r)); o = np.argsort(b); prepped[r] = (b[o], w[o])
+        b, w = prep(*peaks(r), sqrt_p=sqrt_p); o = np.argsort(b); prepped[r] = (b[o], w[o])
     inv = defaultdict(list)
     for r in ref_rows:
         b, w = prepped[r]
@@ -79,7 +81,7 @@ def main(split):
         allit = np.concatenate([peaks(r)[1] for r in rows])
         spec = defaultdict(float)
         for r in rows:          # identical to E08 step 1
-            b, w = prep(*peaks(r)); o = np.argsort(b); b, w = b[o], w[o]
+            b, w = prep(*peaks(r), sqrt_p=sqrt_p); o = np.argsort(b); b, w = b[o], w[o]
             if len(b) == 0: continue
             cand = [inv[int(bb)] for bb in np.unique(b[np.argsort(-w)[:IDX_PEAKS]]) if int(bb) in inv]
             if not cand: continue
@@ -99,7 +101,7 @@ def main(split):
                           zsmi={c: smik.get(c, "") for c in spec_only}))
         if n % 100 == 0: print(f"[{split}]  {n}/{len(qrows)} {time.time()-t0:.0f}s", flush=True)
 
-    out = f"{SPLITS}/pools_{split}.pkl"
+    out = f"{SPLITS}/pools_{'fr_' if sqrt_p else ''}{split}.pkl"
     pickle.dump(pools, open(out, "wb"))
     sizes = [len(p["mass"]) for p in pools]
     print(f"[{split}] wrote {out}: {len(pools)} queries, mass pool median {np.median(sizes):.0f} "
@@ -107,4 +109,4 @@ def main(split):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "seed0_n300")
+    main(sys.argv[1] if len(sys.argv) > 1 else "seed0_n300", "--sqrt-p" in sys.argv)

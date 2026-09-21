@@ -1,0 +1,9 @@
+E25 — spectral ground: our cosine vs Fisher-Rao on sqrt(p), end to end
+
+arm                    C1       C2       C3  weighted
+cosine ground      0.8122   0.4920   0.0000    0.3513
+sqrt-p ground      0.8245   0.5250   0.0000    0.3682
+
+sqrt-p vs cosine: +0.0168 weighted  95% CI [+0.0086, +0.0254]   <- clears zero
+
+runtime 2261s
