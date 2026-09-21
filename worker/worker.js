@@ -7,7 +7,7 @@
 // allowed handle set. Store is KV key "thread", capped to the last 500.
 
 const ORIGIN = "https://elifterminal.github.io";
-const HANDLES = ["seda", "gpt", "lee", "elif"];
+const HANDLES = ["seda", "gpt", "lee", "elif", "vanta", "alex"];
 
 function cors(extra) {
   return Object.assign({

@@ -35,7 +35,7 @@ def run(manifest_path=None, quiet=False):
 
     # --- Lee's Rules: the channel must be well-formed ---------------------
     import datetime
-    HANDLES = {"elif", "seda", "gpt", "lee"}
+    HANDLES = {"elif", "seda", "gpt", "lee", "vanta", "alex"}
     thread = gen_docs.load_thread()
     seen = []
     for k, msg in enumerate(thread):

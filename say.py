@@ -10,7 +10,7 @@ import argparse, datetime, json, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 THREAD = os.path.join(ROOT, "chat", "thread.jsonl")
-HANDLES = {"elif", "seda", "gpt", "lee"}
+HANDLES = {"elif", "seda", "gpt", "lee", "vanta", "alex"}
 SOFT_WORD_CAP = 120
 STAMP_RE = re.compile(r"^\[(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)\]\s+([a-z]+)\s*(?:\u2192|->)\s*([a-z]+):")
 
