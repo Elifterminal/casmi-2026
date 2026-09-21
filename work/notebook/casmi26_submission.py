@@ -78,7 +78,11 @@ def flat(c):
 mzf, mzo = flat("ms2_mzs"); itf, ito = flat("ms2_normalized_intensities"); del t
 def peaks(i): return mzf[mzo[i]:mzo[i + 1]], itf[ito[i]:ito[i + 1]]
 log(f"train loaded: {len(keys):,} spectra, {len(train_smi):,} structures")
-sindex = cp.SpectralIndex(keys, peaks, np.arange(len(keys)))
+# SQRT_P: Vanta's ground -- treat a spectrum as a distribution, compare sqrt(p) (E24/E25,
+# +0.0168 weighted locally). One line in prep(); the index must be built the same way.
+SQRT_P = bool(json.load(open(f"{ASSETS}/weights.json")).get("sqrt_p", False))
+log(f"spectral ground: {'sqrt-p / Fisher-Rao' if SQRT_P else 'cosine on intensities'}")
+sindex = cp.SpectralIndex(keys, peaks, np.arange(len(keys)), sqrt_p=SQRT_P)
 log("spectral index built")
 
 # ---- candidate database: COCONUT -----------------------------------------------------

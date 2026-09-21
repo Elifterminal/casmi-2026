@@ -1,0 +1,19 @@
+loaded 18s
+[nptsseed10_n300]  relatives + pools for 300 molecules
+[nptsseed10_n300]  generated 0 candidates
+[nptsseed10_n300]  characterised 30,936 structures
+[nptsseed10_n300] done 544s
+[nptsseed11_n300]  relatives + pools for 300 molecules
+[nptsseed11_n300]  generated 0 candidates
+[nptsseed11_n300]  characterised 31,949 structures
+[nptsseed11_n300] done 1030s
+[nptsseed12_n300]  relatives + pools for 300 molecules
+[nptsseed12_n300]  generated 0 candidates
+[nptsseed12_n300]  characterised 30,410 structures
+[nptsseed12_n300] done 1621s
+
+                  C1        C2        C3   weighted
+port          0.8245    0.5250    0.0000     0.3682
+E25           0.8245    0.5250    0.0000     0.3682
+
+RESULT: PORT EQUIVALENT to E25

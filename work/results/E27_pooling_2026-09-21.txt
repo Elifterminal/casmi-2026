@@ -1,0 +1,17 @@
+E27 — the pooling theorem: five ways to weight the same match data
+
+arm                  C1       C2       C3  weighted  vs explain
+explain          0.7842   0.5837   0.0000    0.3881     +0.0000
+ex_sqrt          0.7870   0.5930   0.0000    0.3928     +0.0046
+ex_flat          0.7830   0.5924   0.0000    0.3919     +0.0037
+ex_idf           0.7820   0.5856   0.0000    0.3887     +0.0005
+ex_top60         0.7839   0.5800   0.0000    0.3864     -0.0017
+all variants     0.7869   0.5861   0.0000    0.3896     +0.0015
+
+ex_sqrt        +0.0046  95% CI [-0.0004, +0.0101]
+ex_flat        +0.0037  95% CI [-0.0016, +0.0095]
+ex_idf         +0.0005  95% CI [-0.0025, +0.0037]
+ex_top60       -0.0017  95% CI [-0.0039, +0.0000]
+all variants   +0.0015  95% CI [-0.0023, +0.0056]
+
+runtime 1994s

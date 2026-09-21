@@ -124,11 +124,12 @@ def cosine(qb, qw, rb, rw) -> float:
 class SpectralIndex:
     """Reference spectra (training rows) -> per-structure best cosine for a query spectrum."""
 
-    def __init__(self, ref_keys, peaks, rows):
+    def __init__(self, ref_keys, peaks, rows, sqrt_p=False):
         self.keys = ref_keys
+        self.sqrt_p = sqrt_p          # E25: her ground, +0.0168 weighted end to end
         self.prepped, inv = {}, defaultdict(list)
         for r in rows:
-            b, w = prep(*peaks(r)); o = np.argsort(b); self.prepped[r] = (b[o], w[o])
+            b, w = prep(*peaks(r), sqrt_p=sqrt_p); o = np.argsort(b); self.prepped[r] = (b[o], w[o])
         for r in rows:
             b, w = self.prepped[r]
             if len(b) == 0: continue
@@ -138,7 +139,7 @@ class SpectralIndex:
     def hits(self, spectra) -> dict:
         spec = defaultdict(float)
         for mz, it in spectra:
-            b, w = prep(mz, it); o = np.argsort(b); b, w = b[o], w[o]
+            b, w = prep(mz, it, sqrt_p=self.sqrt_p); o = np.argsort(b); b, w = b[o], w[o]
             if len(b) == 0: continue
             cand = [self.inv[int(bb)] for bb in np.unique(b[np.argsort(-w)[:IDX_PEAKS]]) if int(bb) in self.inv]
             if not cand: continue
@@ -283,7 +284,7 @@ def find_relatives(spectra, spec, sindex, peaks, pmz, cache):
     cos_hits = [h for h, _ in sorted(spec.items(), key=lambda kv: (-kv[1], kv[0]))[:MAX_EACH]]
     mod, nl = defaultdict(float), defaultdict(float)
     for mz, it, _, qp, _ in spectra[:SLOW_ROWS]:
-        b, w = prep(mz, it); o = np.argsort(b); b, w = b[o], w[o]
+        b, w = prep(mz, it, sqrt_p=sindex.sqrt_p); o = np.argsort(b); b, w = b[o], w[o]
         if len(b) == 0: continue
         gather = [sindex.inv[int(bb)] for bb in np.unique(b[np.argsort(-w)[:IDX_PEAKS]]) if int(bb) in sindex.inv]
         if not gather: continue
