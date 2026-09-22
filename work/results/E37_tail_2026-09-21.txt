@@ -1,0 +1,15 @@
+E37 — ordering the spectral-only tail by score instead of by key
+
+### production (NP, in COCONUT)
+tail order         C1       C2       C3  weighted
+by key         0.8245   0.5250   0.0000    0.3682
+by score       0.8475   0.5250   0.0000    0.3718
+by score - by key: +0.0037  95% CI [+0.0004, +0.0077]   <- clears zero
+
+### unrestricted (any database)
+tail order         C1       C2       C3  weighted
+by key         0.3240   0.2711   0.0028    0.1750
+by score       0.3899   0.2711   0.0028    0.1855
+by score - by key: +0.0105  95% CI [+0.0062, +0.0156]   <- clears zero
+
+runtime 2583s

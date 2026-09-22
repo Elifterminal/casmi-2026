@@ -509,8 +509,13 @@ def predict2(molecules, sindex, midx, smi_of, weights, peaks, pmz, procs=4, log=
         # tail = spectral-only hits, drawn from the SAME top-NB_TOP window the features use.
         # Drawing from every spectral hit instead differs from E23 by 7e-5 on Class 1 (caught by
         # validate_port2.py) -- small, but the port must match the experiment exactly.
+        # E37: order the tail by SPECTRAL SCORE, not by InChIKey. These candidates were chosen
+        # sensibly and then sorted alphabetically, so whenever the answer was in the tail its
+        # rank was arbitrary. Worth +0.0037 weighted [+0.0004, +0.0077] on the production set,
+        # all of it Class 1, and +0.0105 where structures are often missing from COCONUT.
         top_hits = dict(sorted(spec.items(), key=lambda kv: (-kv[1], kv[0]))[:NB_TOP])
-        order += [smi_of(c) for c in sorted(set(top_hits) - set(cands))[:limit]]
+        rest = set(top_hits) - set(cands)
+        order += [smi_of(c) for c in sorted(rest, key=lambda c: (-top_hits[c], c))[:limit]]
         seen, keep = set(), []
         for smi in order:
             k = key14(smi)

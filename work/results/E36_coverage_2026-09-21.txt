@@ -1,0 +1,12 @@
+E36 — COCONUT vs the merged database, on queries not chosen for COCONUT membership
+
+database         C1       C2       C3  weighted
+coconut      0.3206   0.2694   0.0028    0.1736
+union        0.7688   0.6307   0.0028    0.4079
+
+union - coconut: +0.2343 weighted  95% CI [+0.2091, +0.2595]   <- clears zero
+
+E15 measured the reverse ordering (coconut 0.342, union 0.302) on queries that were
+all in COCONUT by construction, so only dilution could show there.
+
+runtime 2054s

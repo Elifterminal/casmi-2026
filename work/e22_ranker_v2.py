@@ -129,7 +129,10 @@ def build(splits, st, excl_keys=frozenset(), log=print, pools_prefix="", generat
                 v = vec(s, 0.0, 1)
                 if v is not None: cand[f"gen:{s}"] = (v, s)
             out.append(dict(k=k, cls=cls, truth=p["truth"], cand=cand,
-                            tail=[smi_db(c) for c in sorted(set(dict(hits)) - cands)[:TOPN]]))
+                            # E37: tail ordered by spectral score, not by InChIKey. Worth
+                            # +0.0037 [+0.0004, +0.0077] here and +0.0105 on unrestricted queries.
+                            tail=[smi_db(c) for c in sorted(set(dict(hits)) - cands,
+                                                            key=lambda c: (-p["spec"][c], c))[:TOPN]]))
     return out
 
 
