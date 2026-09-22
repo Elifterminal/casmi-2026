@@ -1,0 +1,19 @@
+E35 — where the true structure is lost, before ranking is even asked
+
+### production (COCONUT-filtered)
+class   queries   in COCONUT   retrieved   scorable
+C1          144       96.5%      93.8%     89.6%
+C2          405       98.8%      93.8%     89.9%
+
+### unrestricted (any database)
+class   queries   in COCONUT   retrieved   scorable
+C1          144       41.7%      38.9%     34.7%
+C2          405       44.7%      43.7%     42.7%
+
+reading: 'in COCONUT' is stage 1 (database absence), 'retrieved' folds in stage 2
+(the 10 ppm mass window), 'scorable' folds in stage 3 (we can parse and fragment it).
+Whatever remains between 'scorable' and the measured Class MRR is stage 4: ranking.
+
+for reference, the production set's measured MRR: C1 0.8245, C2 0.5250
+
+runtime 1284s

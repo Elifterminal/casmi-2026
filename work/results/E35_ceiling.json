@@ -1,0 +1,30 @@
+{
+  "production (COCONUT-filtered)": {
+    "2": {
+      "queries": 405,
+      "in_db": 400,
+      "retrieved": 380,
+      "scorable": 364
+    },
+    "1": {
+      "queries": 144,
+      "in_db": 139,
+      "retrieved": 135,
+      "scorable": 129
+    }
+  },
+  "unrestricted (any database)": {
+    "2": {
+      "queries": 405,
+      "in_db": 181,
+      "retrieved": 177,
+      "scorable": 173
+    },
+    "1": {
+      "queries": 144,
+      "in_db": 60,
+      "retrieved": 56,
+      "scorable": 50
+    }
+  }
+}
