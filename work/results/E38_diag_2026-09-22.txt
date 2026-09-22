@@ -1,10 +1,3 @@
-[  149s] [nptsseed10_n300] 300 queries, 550 generated, 31,442 structures characterised
-[  263s] [nptsseed11_n300] 300 queries, 899 generated, 32,769 structures characterised
-[  404s] [nptsseed12_n300] 300 queries, 610 generated, 30,966 structures characterised
-[  520s] [nptsseed20_n300] 284 queries, 844 generated, 32,045 structures characterised
-[  604s] [nptsseed21_n300] 283 queries, 791 generated, 30,550 structures characterised
-[  696s] [nptsseed22_n300] 287 queries, 593 generated, 30,843 structures characterised
-[ 1695s] trained on 41,667 truth/decoy pairs
 E38 — per-query diagnostic: coverage, ranking, and the ceiling above both
 
 class      n  in retrieval  generated  in tail  reachable  measured   oracle  headroom
