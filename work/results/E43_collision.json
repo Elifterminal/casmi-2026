@@ -1,0 +1,18 @@
+{
+  "C1": {
+    "n": 131,
+    "frag_same": 24,
+    "expl_same": 55,
+    "expl_empty": 31,
+    "tie": 0,
+    "truth_ahead": 107
+  },
+  "C2": {
+    "n": 376,
+    "frag_same": 62,
+    "expl_same": 139,
+    "expl_empty": 80,
+    "tie": 21,
+    "truth_ahead": 138
+  }
+}

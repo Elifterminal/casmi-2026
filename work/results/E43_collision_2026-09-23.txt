@@ -1,0 +1,17 @@
+E43 — truth versus its top rival: is the evidence identical, or do we flatten it?
+
+class    pairs  frag collision  EXPL collision  both explain 0  score near-tie  truth ahead
+C1         131          18.3%          42.0%          23.7%           0.0%       81.7%
+C2         376          16.5%          37.0%          21.3%           5.6%       36.7%
+all        507          17.0%          38.3%          21.9%           4.1%       48.3%
+
+Jaccard overlap of the explained-peak sets: median 0.500, mean 0.522
+pairs where the truth explains STRICTLY MORE peaks than its rival: 18.8%
+pairs where the rival explains strictly more: 16.8%
+
+reading: an EXPLANATORY collision means the truth and its best rival account for exactly
+the same observed peaks -- our evidence cannot tell them apart and no scoring function of
+it could. A score near-tie without an explanatory collision is the opposite: the evidence
+differed and we compressed it. The first is a limit of the data; the second is our fault.
+
+runtime 993s

@@ -1,0 +1,16 @@
+[    0s] 12 queries selected (4 per class) from nptsseed10_n300
+[   17s] train.parquet loaded
+[   19s] 1,065 candidate structures characterised
+[   20s]   ARHMXGGUMSXGFS class 1  85 candidates  truth rank 1
+[   27s]   BDCDNTVZSILEOY class 1  40 candidates  truth rank 1
+[   29s]   CAHQQYHQUHYOGU class 1  313 candidates  truth rank 1
+[   29s]   CUAPOUHDJKWLOB class 1  63 candidates  truth rank 1
+[   29s]   AFTBPUXZTDLRSP class 2  66 candidates  truth rank 4
+[   31s]   AGRZUANLVXMRCO class 2  19 candidates  truth rank 1
+[   31s]   AHANXAKGNAKFSK class 2  344 candidates  truth rank 9
+[   31s]   ANDGGVOPIJEHOF class 2  10 candidates  truth rank 1
+[   34s]   ABJOCPBDVGJFLG class 3  70 candidates  truth rank -
+[   34s]   AEWHYWSPVRZHCT class 3  19 candidates  truth rank -
+[   34s]   AXCLECQLCBWNLZ class 3  8 candidates  truth rank -
+[   34s]   BCZUAADEACICHN class 3  28 candidates  truth rank -
+[   34s] wrote /home/lee/casmi-2026/exports/casmi_pools.npz (0.2 MB) + casmi_pools.json
