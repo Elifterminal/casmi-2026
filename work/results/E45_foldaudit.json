@@ -1,0 +1,23 @@
+{
+  "C1": {
+    "n": 144,
+    "any": 95,
+    "train": 82,
+    "valtest_only": 13,
+    "clean": 62
+  },
+  "C2": {
+    "n": 405,
+    "any": 282,
+    "train": 241,
+    "valtest_only": 41,
+    "clean": 164
+  },
+  "C3": {
+    "n": 351,
+    "any": 238,
+    "train": 207,
+    "valtest_only": 31,
+    "clean": 144
+  }
+}

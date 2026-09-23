@@ -1,5 +1,5 @@
 {
-  "source": "E25 sqrt-p (Fisher-Rao) ground, retrieval only, trained on twin-safe NP splits 20-22; local 0.3682 weighted (cosine ground 0.3513)",
+  "source": "E25 sqrt-p (Fisher-Rao) ground, retrieval only, trained on twin-safe NP splits 20-22. Ranker weights UNCHANGED by E37 -- that fix is an ordering change in the spectral-only tail, not a model change. Local weighted MRR 0.3718 (was 0.3682 with the tail ordered by InChIKey; 0.3513 on the plain-cosine ground). Port-checked to 1e-9 by validate_port4.py.",
   "features": [
     "explain",
     "chance_corr",
@@ -22,5 +22,6 @@
   },
   "generate": false,
   "sqrt_p": true,
-  "note": "generation OFF: it cost 0.017 on the leaderboard (sub 2 0.260 vs sub 3 0.277)"
+  "note": "generation OFF: it cost 0.017 on the leaderboard (sub 2 0.260 vs sub 3 0.277)",
+  "pipeline_version": "E37-tail-by-score-2026-09-23"
 }

@@ -1,0 +1,38 @@
+{
+  "massspecgym_rows": 231104,
+  "massspecgym_structures": 28909,
+  "eval": {
+    "C1": {
+      "n": 144,
+      "hit": 95,
+      "adduct": 94
+    },
+    "C2": {
+      "n": 405,
+      "hit": 282,
+      "adduct": 280
+    },
+    "C3": {
+      "n": 351,
+      "hit": 238,
+      "adduct": 237
+    }
+  },
+  "train": {
+    "C1": {
+      "n": 144,
+      "hit": 102,
+      "adduct": 101
+    },
+    "C2": {
+      "n": 405,
+      "hit": 287,
+      "adduct": 287
+    },
+    "C3": {
+      "n": 351,
+      "hit": 239,
+      "adduct": 238
+    }
+  }
+}

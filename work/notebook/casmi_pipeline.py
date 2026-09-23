@@ -28,6 +28,7 @@ RDLogger.DisableLog("rdApp.*")
 
 # ---- constants: identical to the experiments (e07 / e08 / e17) ---------------------------
 BIN, INT_FLOOR, MAX_PEAKS, IDX_PEAKS = 0.02, 0.002, 256, 20
+PIPELINE_VERSION = "E37-tail-by-score-2026-09-23"
 PPM, N_RESCORE, TOPN = 10, 800, 25
 PROTON, H = 1.00727646688, 1.007825032
 TOL, TOPPEAKS, MAX_HEAVY = 0.01, 30, 60
@@ -355,6 +356,8 @@ def rank(feats, spec, cands, weights, limit=TOPN):
     w = np.array([weights[f] for f in FEATS])
     sc = {c: float(np.dot(w, [f[x] for x in FEATS])) for c, f in feats.items()}
     ranked = sorted(sc, key=lambda c: (-sc[c], c))
+    # LEGACY (E18 path, not shipped): tail still ordered by InChIKey. Deliberately NOT
+    # given the E37 fix -- validate_port.py pins this function to E18's exact number.
     return (ranked + sorted(set(spec) - set(cands))[:limit])[:limit]
 
 
@@ -396,6 +399,7 @@ def rank2(cand, spec, cands, weights, limit=TOPN):
     sc = {c: float(np.dot(w, v)) for c, (v, _) in cand.items()}
     order = [cand[c][1] for c in sorted(sc, key=lambda c: (-sc[c], c))]
     order += [None] * 0
+    # LEGACY (not called by predict2, which builds its tail inline with the E37 fix).
     return order, sorted(set(spec) - set(cands))[:limit]
 
 
@@ -450,6 +454,11 @@ def predict2(molecules, sindex, midx, smi_of, weights, peaks, pmz, procs=4, log=
     molecules: list of dict(id, spectra=[(mz, it, adduct, precursor_mz, mode)]).
     Returns {id: [SMILES, best first]} -- already deduplicated by the scorer's key.
     """
+    # Printed so the Kaggle log PROVES which code ran. A dataset push that silently fails leaves
+    # the kernel running the previous version, and `datasets status` reports dataset-level
+    # readiness, not version -- that cost us a whole submission once. Read this line before
+    # trusting any board number.
+    log(f"  pipeline {PIPELINE_VERSION}  tail=by-spectral-score(E37)  generate={generate}")
     prepared, jobs, exact = [], [], {}
     tpc = {}
     for m in molecules:

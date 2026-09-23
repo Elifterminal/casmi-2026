@@ -1,0 +1,21 @@
+[  983s] ranker refit on 41,667 pairs -> cached
+[  983s] 366 clean query keys
+[  983s] 370 clean / 530 contaminated of 900 eval queries
+E46 — baseline on the uncontaminated subset, fixed before the intensity experiment
+
+full set (900)       n= 900  C1 0.8509  C2 0.5230  C3 0.0000  weighted 0.3715  +/- 0.0191
+CLEAN (370)          n= 370  C1 0.7705  C2 0.4678  C3 0.0000  weighted 0.3338  +/- 0.0319
+contaminated (530)   n= 530  C1 0.9117  C2 0.5605  C3 0.0000  weighted 0.3981  +/- 0.0237
+
+class counts on the clean subset: C1 62, C2 164, C3 144
+clean minus full: -0.0377
+
+measured bootstrap half-width on the clean subset: 0.0319
+  against the +0.020 continuation threshold that is 0.6x the half-width
+  (full set for comparison: 0.0191)
+
+reading: THIS is the number any ICEBERG arm must be compared against -- not the 0.3718
+measured on all 900. Comparing a clean-subset arm to a full-set baseline would read a
+change of query set as a change of method, which is the E36 mistake in a new costume.
+
+runtime 1431s
