@@ -1,0 +1,39 @@
+160 queries, 160 with a non-empty pool, 11,267 predictions
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/inten_contr/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/gen/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/inten_contr/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/inten_contr/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/inten_contr/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/gen/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/inten_contr/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/inten_contr/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/gen/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/inten_contr/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/gen/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/gen/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/gen/best.ckpt`
+Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.6.6. To apply the upgrade to your files permanently, run `python -m pytorch_lightning.utilities.upgrade_checkpoint ../../../../tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/iceberg_ckpt/gen/best.ckpt`
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+  25/160 queries  701s  eta 63.1 min  fails 0
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+  50/160 queries  1370s  eta 50.2 min  fails 0
+  75/160 queries  2026s  eta 38.3 min  fails 0
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+  100/160 queries  2679s  eta 26.8 min  fails 0
+  125/160 queries  3484s  eta 16.3 min  fails 0
+  150/160 queries  4127s  eta 4.6 min  fails 0
+
+wrote /home/lee/casmi-2026/exports/iceberg_frames_known.npz (14.0 MB)
+predicted spectra for 11,267 (query, candidate) pairs; 0 queries skipped; 0 individual failures
+runtime 4309s

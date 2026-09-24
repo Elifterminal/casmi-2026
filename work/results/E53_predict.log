@@ -19,3 +19,21 @@ Lightning automatically upgraded your loaded checkpoint from v1.6.5.post0 to v2.
   out = out @ adj
 /tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
   out = out @ adj
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+  25/170 queries  698s  eta 67.5 min  fails 0
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+/tmp/claude-1000/-home-lee/c046c9a5-0d6b-4917-ae00-430a3bba9009/scratchpad/ms-pred/src/ms_pred/nn_utils/nn_utils.py:1175: UserWarning: Sparse CSR tensor support is in beta state. If you miss a functionality in the sparse tensor support, please submit a feature request to https://github.com/pytorch/pytorch/issues. (Triggered internally at ../aten/src/ATen/SparseCsrTensorImpl.cpp:53.)
+  out = out @ adj
+  50/170 queries  1194s  eta 47.8 min  fails 0
+  75/170 queries  1544s  eta 32.6 min  fails 0
+  100/170 queries  2170s  eta 25.3 min  fails 0
+  125/170 queries  2609s  eta 15.7 min  fails 0
+  150/170 queries  3128s  eta 7.0 min  fails 0
+
+wrote /home/lee/casmi-2026/exports/iceberg_frames_seed60.npz (12.1 MB)
+predicted spectra for 9,706 (query, candidate) pairs; 6 queries skipped; 0 individual failures
+runtime 3635s

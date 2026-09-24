@@ -1,0 +1,29 @@
+E54 — does a candidate's predicted energy dependence track the observed one?
+
+157 queries with a ladder of >=2 energies and the truth among the candidates
+
+DIAGONAL ADVANTAGE (matched energies minus mismatched):
+  truth        mean +0.0447  median +0.0186
+  median decoy mean +0.0254  median +0.0071
+  truth beats median decoy: 58.6%
+
+PLAIN PER-FRAME AGREEMENT (the diagonal alone -- the field's per-spectrum channel):
+  truth 0.2288 vs median decoy 0.1014; truth ahead 84.1%
+  truth ranked 1st by per-frame agreement: 45.9%
+
+AS AN ELIMINATOR (off-diagonal beating the diagonal = impossible energy behaviour):
+  truths flagged impossible 24.8%
+  decoys flagged impossible 24.3%
+  -> decoys removed per truth lost: 0.98x   (E52 managed 1.03x)
+  2 energies: n= 29  truth beats median decoy on advantage 58.6%
+  3 energies: n= 29  truth beats median decoy on advantage 69.0%
+  4 energies: n= 22  truth beats median decoy on advantage 50.0%
+  5 energies: n= 26  truth beats median decoy on advantage 65.4%
+  6 energies: n= 20  truth beats median decoy on advantage 50.0%
+  7 energies: n= 11  truth beats median decoy on advantage 72.7%
+  8 energies: n= 10  truth beats median decoy on advantage 40.0%
+  9 energies: n=  5  truth beats median decoy on advantage 40.0%
+  10 energies: n=  3  truth beats median decoy on advantage 33.3%
+  12 energies: n=  2  truth beats median decoy on advantage 100.0%
+
+runtime 106s

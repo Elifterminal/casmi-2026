@@ -83,8 +83,12 @@ def main(splits):
             top = sorted(sc, key=lambda c: (-sc[c], str(c)))[:TOP_N]
             cands = [{"key": str(c), "smiles": q["cand"][c][1]} for c in top]
             truth_in_top = any(key14(q["cand"][c][1]) == q["truth"] for c in top) if q["truth"] else False
+            # Class 3 has a truth KEY but never a truth CANDIDATE -- it is absent from the pool
+            # by construction. Counting it in the denominator understated the design's reach by a
+            # third (47.7% against the honest 78.1%), and I published that number before catching it.
             if q["truth"] is not None:
-                stats["queries_with_truth"] += 1
+                stats["queries_with_truth_key"] += 1
+                if q["cls"] in (1, 2): stats["c12_queries"] += 1
                 stats["truth_in_top25"] += truth_in_top
             stats[f"adduct_{'ok' if supported else 'UNSUPPORTED'}"] += 1
             stats[f"instrument_{instrument}"] += 1
@@ -104,9 +108,11 @@ def main(splits):
     log(f"wrote {path} ({os.path.getsize(path)/1e6:.1f} MB)")
     print("\nwork list summary:")
     for k in sorted(stats): print(f"  {k:28s} {stats[k]:,}")
-    tt = stats["truth_in_top25"] / max(1, stats["queries_with_truth"])
-    print(f"\ntruth inside the top {TOP_N}: {tt:.1%} of queries that have one in the pool")
-    print("  (this is the ceiling on what reranking within 25 can recover)")
+    tt = stats["truth_in_top25"] / max(1, stats["c12_queries"])
+    print(f"\ntruth inside the top {TOP_N}: {tt:.1%} of CLASS 1+2 queries "
+          f"({stats['truth_in_top25']}/{stats['c12_queries']}), "
+          f"{stats['truth_in_top25']/max(1,stats['queries']):.1%} of all queries")
+    print("  (reranking within 25 can only move the queries counted in the first figure)")
     print(f"estimated wall time at 1.9 s/prediction on 7 processes: "
           f"{stats['predictions']*1.9/7/60:.0f} min")
 

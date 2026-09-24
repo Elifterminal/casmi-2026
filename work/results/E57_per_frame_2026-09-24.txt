@@ -1,0 +1,17 @@
+E57 — per-frame scoring against merged (the field's +0.019, in our features)
+
+900 queries, 685 with more than one energy frame
+
+arm                                    C1       C2       C3  weighted   vs merged
+merged only (shipped)              0.8233   0.4384   0.0000    0.3290     +0.0000
++ per-frame                        0.8179   0.4295   0.0000    0.3241     -0.0049
+per-frame, no merged explain       0.8179   0.4299   0.0000    0.3243     -0.0046
+
++ per-frame                      -0.0049  95% CI [-0.0092, -0.0011]
+per-frame, no merged explain     -0.0046  95% CI [-0.0091, -0.0008]
+
+the field measured this change at +0.019 on the BOARD while their own local holdouts
+preferred merged-only. If ours does the same, that reproduces their local result and the
+question can only be settled by a submission -- recorded before the run, not after.
+
+runtime 1340s

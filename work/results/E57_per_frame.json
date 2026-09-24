@@ -1,0 +1,11 @@
+{
+  "merged only (shipped)": {
+    "weighted": 0.3289921092987219
+  },
+  "+ per-frame": {
+    "weighted": 0.32413039779971287
+  },
+  "per-frame, no merged explain": {
+    "weighted": 0.32434829903428075
+  }
+}
