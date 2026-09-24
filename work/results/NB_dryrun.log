@@ -1,8 +1,0 @@
-[     0s] rdkit 2026.03.3, python 3.12.3, kaggle=False
-[    11s] train loaded: 2,539,608 spectra, 275,300 structures
-[    89s] spectral index built
-[    90s] COCONUT: 472,967 structures; weights ['explain', 'chance_corr', 'single', 'nb_max', 'nb_mean10', 'spec_self', 'heavy']
-[    90s] test: 1,213 spectra, 400 molecules
-[   142s]   spectral hits + mass pools for 400 molecules
-[   153s]   characterised 30,435 structures
-[   207s] wrote /home/lee/casmi-2026/work/notebook/submission.csv: 400 molecules, median 25 guesses, 0 fallback rows
