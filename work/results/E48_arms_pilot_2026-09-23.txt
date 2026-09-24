@@ -1,0 +1,17 @@
+E48 — ICEBERG predicted-spectrum agreement as a ranker feature (pilot: split 60 only)
+
+300 queries, ICEBERG features on 1,205 candidates
+
+arm                      C1       C2       C3  weighted  vs baseline
+baseline             0.7397   0.4485   0.0000    0.3202      +0.0000
++ iceberg            0.8184   0.6130   0.0000    0.4068      +0.0866
++ iceberg_flat       0.7924   0.6417   0.0000    0.4155      +0.0954
+
++ iceberg          +0.0866  95% CI [+0.0601, +0.1161]  half-width 0.0280   <- clears zero
++ iceberg_flat     +0.0954  95% CI [+0.0670, +0.1258]  half-width 0.0294   <- clears zero
+
+intensity effect: (+ iceberg) - (+ iceberg_flat) = -0.0087
+  positive means the predicted relative INTENSITIES carry information beyond the
+  predicted peak list -- the quantity E43 showed our fragment features lack.
+
+runtime 452s

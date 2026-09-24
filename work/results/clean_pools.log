@@ -1,0 +1,9 @@
+[npxmtsseed60_n300]  200/300 128s
+[npxmtsseed60_n300]  300/300 145s
+[npxmtsseed60_n300] wrote /home/lee/casmi-2026/work/splits/pools_fr_npxmtsseed60_n300.pkl: 300 queries, mass pool median 6 max 295  runtime 145s
+[npxmtsseed61_n300]  200/300 130s
+[npxmtsseed61_n300]  300/300 151s
+[npxmtsseed61_n300] wrote /home/lee/casmi-2026/work/splits/pools_fr_npxmtsseed61_n300.pkl: 300 queries, mass pool median 7 max 337  runtime 151s
+[npxmtsseed62_n300]  200/300 139s
+[npxmtsseed62_n300]  300/300 158s
+[npxmtsseed62_n300] wrote /home/lee/casmi-2026/work/splits/pools_fr_npxmtsseed62_n300.pkl: 300 queries, mass pool median 8 max 254  runtime 158s

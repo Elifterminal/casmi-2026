@@ -1,0 +1,22 @@
+E47c — do ICEBERG's predicted spectra discriminate the true structure?
+
+predictions: 251 queries, 6,289 candidates
+
+1. NON-DEGENERACY  median pairwise cosine between candidates' predicted spectra: 0.2874
+   (share of pairs above 0.9: 1.6%; above 0.99: 0.2%)
+
+2. PREDICTED-vs-OBSERVED COSINE, n=141 queries with the truth in pool
+   truth            median 0.1466  mean 0.1990
+   median pool-mate median 0.0507  mean 0.1012
+   top rival        median 0.1181  mean 0.1820
+   truth beats the median pool-mate: 71.6%
+   truth beats its TOP RIVAL:        45.4%
+
+3. RANK OF THE TRUTH by predicted-spectrum cosine alone
+   rank 1: 53.9%   within top 3: 78.0%   median rank 1
+
+   for reference, E43: our fragment `explain` feature puts the truth ahead of its top
+   rival by 18.8% to 16.8% -- a two-point edge. Anything much above 50% here is new
+   information, and that is the whole question.
+
+runtime 46s

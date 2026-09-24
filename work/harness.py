@@ -39,6 +39,21 @@ CLASS_SHARES = (0.16, 0.45, 0.39)    # UNVERIFIED -- see scoring.weighted_mrr
 COCO = os.path.expanduser("~/casmi-2026/work/data/coconut/coconut_csv_lite-09-2026.csv")
 
 
+def massspecgym_keys():
+    """InChIKey14 of every structure the open ICEBERG weights may have trained on.
+
+    E45 read the folds and I built a "clean" set by excluding only MassSpecGym's TRAIN fold. Then
+    the checkpoints turned out to name their own runs -- dag_msg_all_iceberg / split_rnd1 -- which
+    is a RANDOM split over ALL MassSpecGym entries, not the official fold split. So a val/test-fold
+    structure is just as likely to be inside those weights. The only defensible exclusion is every
+    MassSpecGym structure, and this returns InChIKey14s (the harness's identity) for the scorer
+    keys the audit collected.
+    """
+    import pickle
+    d = pickle.load(open(os.path.join(OUT, "massspecgym_keys.pkl"), "rb"))
+    return d["keys"]
+
+
 def coconut_keys():
     """InChIKey14 of every COCONUT-2026-09 structure (E16: NP-only query sets)."""
     co = pd.read_csv(COCO, usecols=["standard_inchi_key"], dtype=str).dropna()
@@ -191,6 +206,9 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--np-coconut", action="store_true",
                     help="E16: query molecules only from structures natively in COCONUT")
+    ap.add_argument("--exclude-massspecgym", action="store_true",
+                    help="E47: drop query structures present in MassSpecGym, so every query is "
+                         "outside the open ICEBERG weights BY CONSTRUCTION rather than by a 68% cull")
     ap.add_argument("--only-lib", default=None,
                     help="E34: draw query structures and their query spectra from this library only")
     ap.add_argument("--legacy-inchikey", action="store_true",
@@ -207,8 +225,19 @@ def main():
         from twins import train_canon
         canon = train_canon(df)
         print(f"  twin-safe: {len(canon):,} structures, {len(set(canon.values())):,} scorer identities")
-    assign, query_rows = build(df, a.n_query, a.seed, coconut_keys() if a.np_coconut else None,
-                               canon, a.only_lib)
+    only = coconut_keys() if a.np_coconut else None
+    if a.exclude_massspecgym:
+        # scorer-key identity for the MassSpecGym side, InChIKey14 on ours: map through the same
+        # canon the harness uses, so a tautomer twin of a MassSpecGym molecule is excluded too.
+        import scoring
+        msg = massspecgym_keys()
+        smi = df.drop_duplicates("inchikey14").set_index("inchikey14")["normalized_smiles"]
+        drop = {k for k, v in smi.items() if scoring.key14(v) in msg}
+        keep = set(smi.index) - drop
+        only = keep if only is None else (only & keep)
+        print(f"  excluding MassSpecGym: {len(drop):,} structures dropped, "
+              f"{len(only):,} eligible remain")
+    assign, query_rows = build(df, a.n_query, a.seed, only, canon, a.only_lib)
     ref_rows, cand, queries = apply_split(df, assign, query_rows, canon)
 
     counts = pd.Series([c for c in assign.values()]).value_counts().sort_index()
@@ -236,7 +265,8 @@ def main():
     print("  ok  no query spectrum leaked into the reference index")
 
     os.makedirs(OUT, exist_ok=True)
-    tag = (f"{'np' if a.np_coconut else ''}{'' if canon is None else 'ts'}"
+    tag = (f"{'np' if a.np_coconut else ''}{'xm' if a.exclude_massspecgym else ''}"
+           f"{'' if canon is None else 'ts'}"
            f"{'tims' if a.only_lib == 'enveda-np-examples' else ''}seed{a.seed}_n{a.n_query}")
     c3 = {k for k, c in assign.items() if c == 3}
     db_exclude = sorted(expand(c3, canon) - c3)    # training-side twins of Class 3 answers
