@@ -48,7 +48,7 @@ WORK = os.path.dirname(os.path.abspath(__file__))
 SPLITS = os.path.join(WORK, "splits")
 OUT = os.path.expanduser("~/casmi-2026/exports")
 SPLIT = "nptsseed10_n300"
-PER_CLASS = 4
+PER_CLASS = 4   # overridden by --all
 
 
 def main():
@@ -60,14 +60,16 @@ def main():
     w = np.array(json.load(open(os.path.join(SPLITS, "ranker_w_fr.json")))["w"])
 
     # queries from one split, balanced across classes
-    sp = json.load(open(f"{SPLITS}/split_{SPLIT}.json"))
-    qrows, assign = sp["query_rows"], sp["assign"]
-    byq = {q["k"]: q for q in got["ev"] if q["k"] in qrows}
-    pick = []
-    for c in (1, 2, 3):
-        ks = [k for k in qrows if assign[k] == c and k in byq]
-        pick += sorted(ks)[:PER_CLASS]
-    log(f"{len(pick)} queries selected ({PER_CLASS} per class) from {SPLIT}")
+    splits = sys.argv[1:] or [SPLIT]
+    qrows, assign, pools_all = {}, {}, {}
+    for sname in splits:
+        sp = json.load(open(f"{SPLITS}/split_{sname}.json"))
+        qrows.update(sp["query_rows"]); assign.update(sp["assign"])
+        for pp in pickle.load(open(f"{SPLITS}/pools_fr_{sname}.pkl", "rb")):
+            pools_all[pp["k"]] = pp
+    byq = pools_all
+    pick = sorted(k for k in qrows if k in byq)
+    log(f"{len(pick)} queries from {len(splits)} split(s): {', '.join(splits)}")
 
     t = pq.read_table(os.path.join(WORK, "data", "train.parquet"),
                       columns=["inchikey14", "normalized_smiles", "precursor_mz", "adduct",
@@ -102,16 +104,16 @@ def main():
         for j, f in enumerate(frames):
             arrays[f"{k}/spec{j}_mz"] = f["mz"]; arrays[f"{k}/spec{j}_intensity"] = f["it"]
 
-        cands = sorted(q["cand"].items(), key=lambda kv: -float(np.dot(w, kv[1][0])))
+        cands = sorted(((c, (None, sm)) for c, sm in byq[k]["mass"].items() if sm),
+                       key=lambda kv: -byq[k]["spec"].get(kv[0], 0.0))
         rows_out, frags = [], []
         for rank, (cid, (vec, smi)) in enumerate(cands, 1):
             inf = info.get(smi)
             fm = np.asarray(sorted(inf["full"]), np.float64) if inf and inf.get("full") else np.empty(0)
             frags.append(fm)
-            rows_out.append(dict(rank=rank, smiles=smi, generated=str(cid).startswith("gen:"),
-                                 score=float(np.dot(w, vec)), n_fragments=int(len(fm)),
-                                 is_truth=bool(key14(smi) == q["truth"]),
-                                 **{f: float(v) for f, v in zip(FEATS2, vec)}))
+            rows_out.append(dict(rank=rank, smiles=smi, n_fragments=int(len(fm)),
+                                 spec_score=float(byq[k]["spec"].get(cid, 0.0)),
+                                 is_truth=bool(key14(smi) == q["truth"])))
         # ragged fragment lists -> one flat array plus offsets, so nothing is padded or truncated
         arrays[f"{k}/fragments"] = np.concatenate(frags) if frags else np.empty(0)
         arrays[f"{k}/fragment_offsets"] = np.cumsum([0] + [len(f) for f in frags])
@@ -128,8 +130,8 @@ def main():
         log(f"  {k} class {assign[k]}  {len(rows_out)} candidates  truth rank {truth_rank or '-'}")
 
     np.savez_compressed(f"{OUT}/casmi_pools.npz", **arrays)
-    json.dump(dict(feature_names=FEATS2, ranker_weights=list(map(float, w)),
-                   split=SPLIT, queries=meta),
+    json.dump(dict(splits=splits, note="candidates ordered by spectral score; clean splits = query structures absent from MassSpecGym by construction",
+                   queries=meta),
               open(f"{OUT}/casmi_pools.json", "w"), indent=1)
     mb = os.path.getsize(f"{OUT}/casmi_pools.npz") / 1e6
     log(f"wrote {OUT}/casmi_pools.npz ({mb:.1f} MB) + casmi_pools.json")
