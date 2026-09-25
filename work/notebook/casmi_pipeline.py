@@ -361,7 +361,7 @@ def rank(feats, spec, cands, weights, limit=TOPN):
     return (ranked + sorted(set(spec) - set(cands))[:limit])[:limit]
 
 
-def features2(q, cands, gen, spec, info, smi_of):
+def features2(q, cands, gen, spec, info, smi_of, per_frame=False):
     """Feature vectors for both channels: retrieved candidates and generated ones (E23)."""
     hits = sorted(spec.items(), key=lambda kv: (-kv[1], kv[0]))[:NB_TOP]
     good = [(h, c) for h, c in hits if info.get(smi_of(h)) is not None]
@@ -372,13 +372,20 @@ def features2(q, cands, gen, spec, info, smi_of):
         inf = info.get(smi)
         if inf is None: return None
         e = explain(q["allmz"], q["allit"], inf["full"], q["positive"])
+        sg = explain(q["allmz"], q["allit"], inf["single"], q["positive"])
+        if per_frame and len(q.get("frames", ())) > 1:
+            # the ranker is linear and the weights are shared, so averaging the two FEATURE
+            # vectors is averaging the two models' scores -- the operation the field reports
+            ev = [explain(mz, it, inf["full"], q["positive"]) for mz, it in q["frames"]]
+            sv = [explain(mz, it, inf["single"], q["positive"]) for mz, it in q["frames"]]
+            e = 0.5 * (e + float(np.mean(ev))); sg = 0.5 * (sg + float(np.mean(sv)))
         if hfp:
             v = hcos * np.array(DataStructs.BulkTanimotoSimilarity(inf["fp"], hfp))
             nbm, nb10 = float(v.max()), float(v[:10].mean())
         else:
             nbm = nb10 = 0.0
         f = dict(explain=e, chance_corr=e - chance(inf["full"], q["M"]),
-                 single=explain(q["allmz"], q["allit"], inf["single"], q["positive"]),
+                 single=sg,
                  nb_max=nbm, nb_mean10=nb10, spec_self=spec_self, heavy=inf["heavy"],
                  is_generated=float(is_gen))
         return np.array([f[x] for x in FEATS2])
@@ -448,7 +455,7 @@ def _gen_job(args):
 
 
 def predict2(molecules, sindex, midx, smi_of, weights, peaks, pmz, procs=4, log=print, limit=TOPN,
-             generate=True):
+             generate=True, per_frame=False):
     """E23 pipeline: retrieval + analog generation, ranked together.
 
     molecules: list of dict(id, spectra=[(mz, it, adduct, precursor_mz, mode)]).
@@ -458,7 +465,7 @@ def predict2(molecules, sindex, midx, smi_of, weights, peaks, pmz, procs=4, log=
     # the kernel running the previous version, and `datasets status` reports dataset-level
     # readiness, not version -- that cost us a whole submission once. Read this line before
     # trusting any board number.
-    log(f"  pipeline {PIPELINE_VERSION}  tail=by-spectral-score(E37)  generate={generate}")
+    log(f"  pipeline {PIPELINE_VERSION}  tail=by-spectral-score(E37)  generate={generate}  per_frame={per_frame}")
     prepared, jobs, exact = [], [], {}
     tpc = {}
     for m in molecules:
@@ -471,6 +478,12 @@ def predict2(molecules, sindex, midx, smi_of, weights, peaks, pmz, procs=4, log=
         M = float(np.median(Ms)) if Ms else np.nan
         q = dict(allmz=np.concatenate([np.asarray(s[0], np.float32) for s in sp]),
                  allit=np.concatenate([np.asarray(s[1], np.float32) for s in sp]),
+                 # E58: the individual frames, kept beside the merge. Every feature we ship reads
+                 # the concatenation; the field measured that averaging a PER-SPECTRUM channel
+                 # with the merged one is worth +0.019 on the board -- their largest single
+                 # effect -- while their local holdouts preferred merged-only, as ours does
+                 # (E57: -0.0049, interval clearing zero). Local cannot settle this; the board can.
+                 frames=[(np.asarray(s[0], np.float32), np.asarray(s[1], np.float32)) for s in sp],
                  positive=str(sp[0][4]).lower().startswith("pos"), M=M)
         # generate=False is the A/B arm: identical ranking, generation channel switched off.
         # Local: 0.3663 with generation, 0.3519 without (E23).
@@ -512,7 +525,7 @@ def predict2(molecules, sindex, midx, smi_of, weights, peaks, pmz, procs=4, log=
     w = np.array([weights[f] for f in FEATS2])
     out = {}
     for (mid, q, cands, spec), gen in zip(prepared, gen_per):
-        cand = features2(q, cands, gen, spec, info, smi_of)
+        cand = features2(q, cands, gen, spec, info, smi_of, per_frame=per_frame)
         sc = {c: float(np.dot(w, v)) for c, (v, _) in cand.items()}
         order = [cand[c][1] for c in sorted(sc, key=lambda c: (-sc[c], c))]
         # tail = spectral-only hits, drawn from the SAME top-NB_TOP window the features use.

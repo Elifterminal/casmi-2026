@@ -67,7 +67,10 @@ keys = np.asarray(t.column("inchikey14"))
 _st = pd.DataFrame({"k": keys, "s": np.asarray(t.column("normalized_smiles")),
                     "f": np.asarray(t.column("molecular_formula"))}).drop_duplicates("k")
 _st = _st[np.isfinite(_st.f.map(cp.formula_mass))]
-train_smi = dict(zip(_st.k, _st.s)); del _st
+train_smi = dict(zip(_st.k, _st.s))
+# neutral mass per training structure, from the formula we already have. Needed for the union
+# database below; computing it here avoids a second pass and keeps the same parse-filter.
+train_mass = dict(zip(_st.k, _st.f.map(cp.formula_mass))); del _st
 
 
 def flat(c):
@@ -85,10 +88,37 @@ log(f"spectral ground: {'sqrt-p / Fisher-Rao' if SQRT_P else 'cosine on intensit
 sindex = cp.SpectralIndex(keys, peaks, np.arange(len(keys)), sqrt_p=SQRT_P)
 log("spectral index built")
 
-# ---- candidate database: COCONUT -----------------------------------------------------
+# ---- candidate database: COCONUT union the training structures -----------------------
+# E15 concluded "ship COCONUT alone" because a merged database scored worse -- but that test
+# required every query to be IN COCONUT, so merging could only add decoys. The logic still holds
+# for Class 2 and 3: a molecule with no spectrum anywhere cannot be a training structure. It does
+# NOT hold for Class 1, whose molecules ARE training structures by definition -- if a Class 1
+# answer is outside COCONUT we could never retrieve it at any ranking quality, and our local test
+# cannot see that because our queries are COCONUT-native by construction. The public 0.336
+# notebook retrieves from exactly this union (711,705 structures against our COCONUT-only
+# 472,967). UNION: set by the dataset's weights.json so it stays A/B-able.
+UNION_DB = bool(json.load(open(f"{ASSETS}/weights.json")).get("union_db", False))
 co = pd.read_parquet(f"{ASSETS}/coconut_min.parquet")
-midx = cp.MassIndex(co.inchikey14.to_numpy(), co.mass.to_numpy())
-coco_smi = dict(zip(co.inchikey14, co.smiles)); del co
+coco_smi = dict(zip(co.inchikey14, co.smiles))
+_db_k = list(co.inchikey14.to_numpy()); _db_m = list(co.mass.to_numpy()); del co
+if UNION_DB:
+    _have = set(_db_k)
+    _extra_k, _extra_m = [], []
+    for _k, _s in train_smi.items():
+        if _k in _have: continue
+        _m = train_mass.get(_k)
+        if _m is None or not np.isfinite(_m) or _m <= 0: continue
+        _extra_k.append(_k); _extra_m.append(_m)
+    _db_k += _extra_k; _db_m += _extra_m
+    log(f"candidate DB: COCONUT {len(_have):,} + {len(_extra_k):,} training structures "
+        f"= {len(_db_k):,}")
+    # if the flag is on, the union must actually grow the database. A silent no-op here would
+    # mean submitting a "union" run that was really COCONUT-only, and the board read would be
+    # attributed to the wrong change.
+    assert len(_extra_k) > 10000, f"union_db is ON but only added {len(_extra_k)} structures"
+else:
+    log(f"candidate DB: COCONUT only, {len(_db_k):,} structures")
+midx = cp.MassIndex(np.asarray(_db_k), np.asarray(_db_m, dtype=float))
 smi_of = lambda k: train_smi.get(k) or coco_smi.get(k, "")
 weights = json.load(open(f"{ASSETS}/weights.json"))["weights"]
 log(f"COCONUT: {len(coco_smi):,} structures; weights {list(weights)}")
@@ -108,8 +138,11 @@ log(f"test: {len(test):,} spectra, {len(mols)} molecules")
 # while local said +0.015 -- this is the A/B that isolates the channel.
 GENERATE = bool(json.load(open(f"{ASSETS}/weights.json")).get("generate", True))
 log(f"generation channel: {'ON' if GENERATE else 'OFF'}")
+PER_FRAME = bool(json.load(open(f"{ASSETS}/weights.json")).get("per_frame", False))
+log(f"per-frame channel: {'ON' if PER_FRAME else 'OFF'}")
 pred = cp.predict2(mols, sindex, midx, smi_of, weights, peaks, train_pmz,
-                   procs=os.cpu_count() or 4, log=log, limit=cp.TOPN, generate=GENERATE)
+                   procs=os.cpu_count() or 4, log=log, limit=cp.TOPN, generate=GENERATE,
+                   per_frame=PER_FRAME)
 
 # ---- submission ------------------------------------------------------------------------
 FALLBACK = "CCO"          # never emit an empty row: a missing/null prediction rejects the file

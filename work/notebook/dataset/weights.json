@@ -1,5 +1,5 @@
 {
-  "source": "E25 sqrt-p (Fisher-Rao) ground, retrieval only, trained on twin-safe NP splits 20-22. Ranker weights UNCHANGED by E37 -- that fix is an ordering change in the spectral-only tail, not a model change. Local weighted MRR 0.3718 (was 0.3682 with the tail ordered by InChIKey; 0.3513 on the plain-cosine ground). Port-checked to 1e-9 by validate_port4.py.",
+  "source": "BEST KNOWN CONFIGURATION: board 0.288. sqrt-p (Fisher-Rao) ground, generation OFF, spectral-only tail ordered by spectral score (E37), candidate DB = COCONUT ALONE. Both mechanisms ported from the public 0.336 notebook were measured and REVERTED: union_db scored 0.269 alone (-0.019) and per_frame local -0.0049. The union helps them and hurts us because their neural ranker absorbs a 53% larger candidate pool while our eight linear features are swamped by the extra decoys -- a component's value depends on the ranker behind it, so it does not port in isolation.",
   "features": [
     "explain",
     "chance_corr",
@@ -23,5 +23,7 @@
   "generate": false,
   "sqrt_p": true,
   "note": "generation OFF: it cost 0.017 on the leaderboard (sub 2 0.260 vs sub 3 0.277)",
-  "pipeline_version": "E37-tail-by-score-2026-09-23"
+  "pipeline_version": "E37-tail-by-score-2026-09-23",
+  "union_db": false,
+  "per_frame": false
 }
