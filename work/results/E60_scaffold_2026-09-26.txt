@@ -1,0 +1,20 @@
+E60 — scaffold-level ranker holdout: how much of our local score was borrowed?
+
+scaffold leakage before the fix: 224/864 eval queries (25.9%) shared a Murcko scaffold with a training query
+this arm drops 195/862 training queries (22.6%)
+
+arm                                    C1       C2       C3  weighted      vs A
+A: identity holdout (current)      0.6877   0.4718   0.0000    0.3223   +0.0000
+B: + scaffold holdout              0.7261   0.4630   0.0000    0.3245   +0.0022
+
+scaffold holdout effect: +0.0022  95% CI [-0.0023, +0.0066]
+
+reading: our board score for this pipeline family is 0.288. Arm B is the honest local
+number -- if it lands closer to 0.288 than arm A does, scaffold leakage was part of the
+level gap, and what remains is attributable to famousness (E46) and to whatever else we
+have not found.
+
+LIMITATION: 215 of 864 eval queries (24.9%) are acyclic and have no Murcko scaffold,
+so this protects three quarters of the set, not all of it.
+
+runtime 1958s
