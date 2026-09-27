@@ -1,0 +1,22 @@
+E61 — validation query set for the fork
+
+arm               selected
+COCONUT                300
+non-COCONUT            300
+total                  600
+
+controls applied:
+  1. famousness      every structure is ABSENT from MassSpecGym (E46: fame = 0.064)
+  2. COCONUT balance half in, half out, so the set sees coverage BENEFIT as well as
+                     decoy COST -- every previous set of ours could only see cost
+  3. scaffold rarity Murcko scaffold appears <= 3 times in the libraries
+  4. twin-safety     one query per scorer identity; tautomers cannot recur
+
+NOT CONTROLLED, and quoted with the set: the fork's rankers train on precomputed rows
+(rank_train.npz: X, Y, M, G) with no structure identity, so we cannot hold these queries
+out of their training. The residual bias would make local read HIGH, which is the
+direction our instrument has always erred -- so local remains an UPPER BOUND on the board,
+not an estimate of it.
+
+wrote /home/lee/casmi-2026/work/splits/valset_fork_queries.json
+runtime 1930s
