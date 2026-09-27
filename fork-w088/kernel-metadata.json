@@ -14,8 +14,11 @@
     "megayak/casmi26-simulated-ranker-rows",
     "prvsiyan/chebi-lipidmaps-casmi26",
     "prvsiyan/coconut-casmi26-candidates",
-    "thedevastator/open-source-natural-product-annotations"
+    "thedevastator/open-source-natural-product-annotations",
+    "bobbykershii/casmi26-elif-valset"
   ],
-  "competition_sources": ["enveda-CASMI26-molecule-id-mass-spectra"],
+  "competition_sources": [
+    "enveda-CASMI26-molecule-id-mass-spectra"
+  ],
   "kernel_sources": []
 }

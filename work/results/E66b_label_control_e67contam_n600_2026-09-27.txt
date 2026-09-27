@@ -1,0 +1,13 @@
+E66b — label control: is the low-energy shallowness effect about being the ANSWER?
+
+arm                n              slope win         shallower at low E
+real              61   0.537 [0.495,0.581]   0.522 [0.485,0.560]
+pseudo            50   0.468 [0.427,0.506]   0.478 [0.446,0.510]
+mass_nearest      55   0.485 [0.437,0.532]   0.494 [0.462,0.524]
+
+real minus pseudo on the low-energy measure: +0.044
+  A pseudo arm near 0.500 means the effect tracks being the correct molecule.
+  A pseudo arm near the real arm means the statistic is an artifact of how the
+  work list is built, and E66's 0.574 does not survive.
+
+runtime 16s

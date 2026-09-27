@@ -1,0 +1,23 @@
+E69 — is the break-depth effect limited by ICEBERG's accuracy?  (split e67contam_n600)
+
+61 queries
+
+ICEBERG accuracy on the truth (sqrt(p) cosine): median 0.385, mean 0.394, range 0.023-0.846
+
+tercile             n         cosine       shallower at low E
+low  accuracy      20         0.181   0.569 [0.494,0.646]
+mid  accuracy      20         0.382   0.488 [0.433,0.526]
+high accuracy      21         0.607   0.511 [0.441,0.574]
+
+all queries        61         0.394   0.522 [0.484,0.558]
+
+correlation between accuracy and the effect: r = -0.122 (95% CI -0.389 to +0.147)
+high tercile minus low tercile: -0.058
+
+READING IT: a clear positive gradient means accuracy is the lever and a better
+fragment predictor would amplify the effect. A flat gradient means 0.574 is the whole
+mechanism. The confound runs the same way as the hypothesis -- easy-to-predict
+molecules may be easy to distinguish for unrelated reasons -- so a gradient is
+evidence, not proof.
+
+runtime 14s

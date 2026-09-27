@@ -1,0 +1,46 @@
+E64 — validation split carrying a real energy ladder
+
+arm               selected
+COCONUT                 28
+non-COCONUT            572
+total                  600
+
+queries by number of distinct timsTOF energies:
+   154 queries with 2 energies
+   446 queries with 3 energies
+
+CONTROL 2 (COCONUT BALANCE) IS ABANDONED, and not by preference. COCONUT membership is
+9.5% of all 275,810 training structures but 0.11% of the 180,426 energy-rich ones -- 194
+structures in total. Natural-product spectra in our libraries sit on Orbitrap, qTof and
+unlabelled instruments, which are exactly the ones that recorded no collision energy. A
+set cannot be both COCONUT-balanced and energy-laddered from this data.
+
+That is itself worth writing down: the test set IS all three at once -- natural-product-
+like, timsTOF, and energy-rich -- because Enveda acquired it themselves on one instrument.
+No validation set drawn from the training libraries can reproduce that combination.
+
+Balance was there so an MRR estimate could see the BENEFIT of adding a candidate database
+and not only its cost. The bond-depth test asks whether a physical quantity separates
+truth from decoys inside a fixed pool, which balance does not bear on. It must be
+restored before this split is used for any MRR comparison.
+
+controls: 1 famousness (MassSpecGym excluded) | 2 COCONUT balance ABANDONED (see above) |
+          3 scaffold rarity (<= 3) | 4 twin-safety |
+          5 energy ladder (>= 2 single-valued timsTOF energies, 15-65 eV)  <- NEW
+
+WHY CONTROL 5 EXISTS: in split 60, 173 of 300 queries had no usable collision energy and
+the bond-depth test (E63) reduced to n=28. The scarcity is a property of the slice our
+novelty controls select -- qTof/ToF/unlabelled NP depositions record no energy -- not of
+the data. The scored test set is 100% timsTOF with 85% of molecules carrying >=2 energies,
+so the energy line of attack has never been tested on data resembling the board.
+
+STILL NOT CONTROLLED, quoted with the set: the fork's rankers train on rows with no
+structure identity, so these queries cannot be held out of their training. The residual
+makes local read HIGH. Local is an upper bound, not an estimate.
+
+A COST OF CONTROL 5, stated rather than assumed: requiring timsTOF selects the libraries
+that record metadata properly, which may correlate with being better studied in ways
+MassSpecGym membership does not capture. Same direction as every other residual we have.
+
+wrote /home/lee/casmi-2026/work/splits/valset_energy_queries.json
+runtime 596s

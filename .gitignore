@@ -24,3 +24,20 @@ work/notebook/submission.csv
 # regenerable prediction artifacts -- large, reproducible from the work lists + checkpoints
 exports/*.npz
 work/results/*.log
+
+# --- 2026-09-27, the bond-depth and reranker work ---
+# Third-party model weights pulled from the W088 fork's Kaggle output (714 MB). Rebuildable by
+# re-downloading that notebook's output; not ours to redistribute.
+local-assets/
+# Local validation run artifacts: regenerated parquet, 4.2 GB.
+fork-w088/localrun/
+fork-w088/localrun_50.log
+# Work lists for the ICEBERG runs (9.4 MB). Derived from the competition training set, so they stay
+# out of a public repo for the same reason work/data/ does; regenerable from e65/e49 + the splits.
+exports/*.json
+# Another author's code, copied from a public Kaggle notebook (prvsiyan) for the fork. Held back
+# pending a licensing/attribution decision -- Kaggle notebooks are usually Apache-2.0, which would
+# allow redistribution WITH attribution, but that is not ours to assume.
+fork-w088/pv.py
+fork-w088/pv_fp.py
+fork-w088/casmi_engine.py

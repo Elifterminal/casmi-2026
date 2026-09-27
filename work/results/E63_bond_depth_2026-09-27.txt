@@ -1,0 +1,26 @@
+E63 — bond-level break depth against the energy ladder (Lee's idea, properly tested)
+
+28 queries with >=2 energies and the truth among the candidates
+
+SLOPE of implied break depth against collision energy (physics says positive):
+  truth        mean +0.0061  median +0.0231
+  median decoy mean +0.0111  median +0.0127
+  truth beats median decoy: 46.4%  (95% CI 28.6% to 64.3%)
+  chance is 50.0%; CI excludes chance: NO
+    class 1: n=10  truth wins 30.0%
+    class 2: n=18  truth wins 55.6%
+
+IMPLIED DEPTH AT THE LOWEST ENERGY (physics says truths should be shallower):
+  truth 1.442 vs median decoy 1.348; truth shallower in 32.1%
+
+AS AN ELIMINATOR (negative slope = deep fragments before shallow ones):
+  truths flagged implausible 28.6%
+  decoys flagged implausible 28.1%
+  -> decoys removed per truth lost: 0.98x
+     (E52 with our fragmenter 1.03x; E54 mass-collapsed 1.25x)
+
+CAVEAT, unchanged: this inherits ICEBERG's accuracy, and on molecules outside its
+training its predicted-vs-observed cosine is 0.147. A claim about which bonds broke is
+only as good as the prediction of which fragments appear.
+
+runtime 31s

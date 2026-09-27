@@ -64,7 +64,8 @@ def load_meta():
     return pq.read_table(DATA, columns=META).to_pandas()
 
 
-def build(df, n_query=900, seed=0, only=None, canon=None, only_lib=None):
+def build(df, n_query=900, seed=0, only=None, canon=None, only_lib=None, np_gate=True,
+          prefer_ladder=False):
     rng = np.random.default_rng(seed)
 
     # candidate query structures: NP-ish, in the test's mass range, not absurdly
@@ -76,7 +77,17 @@ def build(df, n_query=900, seed=0, only=None, canon=None, only_lib=None):
         n=("ingest_lib", "size"),
         np_hits=("_np", "sum"),
         mz=("precursor_mz", "median"))
-    eligible = per[(per.np_hits >= 1) & (per.mz.between(MASS_LO, MASS_HI)) & (per.n >= 2)]
+    ok = (per.mz.between(MASS_LO, MASS_HI)) & (per.n >= 2)
+    if np_gate:
+        ok &= (per.np_hits >= 1)
+    else:
+        # E64: the NP-library gate and a usable collision-energy ladder are very nearly disjoint
+        # in these libraries -- of 600 energy-rich timsTOF structures, 10 carry an NP-library
+        # spectrum. The NP libraries are the GNPS-style depositions that never recorded an energy.
+        # A split that must measure anything along the energy axis therefore cannot also demand
+        # NP provenance. Mass range and the two-spectra minimum still apply.
+        print("  --no-np-gate: NP-library requirement DROPPED for this split")
+    eligible = per[ok]
     if only_lib is not None:
         # E34: the real test is 100% Bruker timsTOF while our eval queries were 0.2% timsTOF.
         # Restricting query STRUCTURES and their query SPECTRA to one library lets us score on a
@@ -118,9 +129,45 @@ def build(df, n_query=900, seed=0, only=None, canon=None, only_lib=None):
     if only_lib is not None:                    # draw query spectra from that library only
         lib_rows = set(np.flatnonzero((df["ingest_lib"] == only_lib).to_numpy()))
         groups = {k: np.array([r for r in v if r in lib_rows]) for k, v in groups_all.items()}
+    ladder_rows = None
+    if prefer_ladder:
+        # E65: the cap on query spectra per molecule is applied BEFORE anything knows that this
+        # split exists to measure a collision-energy ladder, so the sampler happily spends all
+        # three slots on merged-energy rows and the ladder vanishes. 113 of 366 Class 1+2 queries
+        # were lost that way. Prefer rows carrying exactly ONE recorded energy, one row per
+        # distinct energy, so a ladder survives the cap; fall back to the ordinary sampler for
+        # any structure that has none.
+        # load_meta() reads only META, and row order is raw parquet order because it neither
+        # filters nor sorts -- so this column lines up with df positionally.
+        ce = pq.read_table(DATA, columns=["collision_energy_ev"]) \
+               .column("collision_energy_ev").to_pylist()
+        assert len(ce) == len(df), f"energy column {len(ce)} != df {len(df)}"
+        single = {}
+        for i, v in enumerate(ce):
+            vals = v if isinstance(v, list) else ([v] if isinstance(v, (int, float)) else [])
+            vals = [float(x) for x in vals if x is not None and np.isfinite(x)]
+            if len(vals) == 1: single[i] = vals[0]
+        ladder_rows = {}
+        for k, rws in groups.items():
+            by_e = {}
+            for r in rws:
+                e = single.get(int(r))
+                if e is not None: by_e.setdefault(e, int(r))
+            if len(by_e) >= 2:
+                ladder_rows[k] = [by_e[e] for e in sorted(by_e)]
+        print(f"  --prefer-ladder: {len(ladder_rows):,} structures have >=2 single-energy rows")
+
     query_rows = {}
     for k in keys:
         rows = groups[k]
+        if ladder_rows is not None and k in ladder_rows:
+            lr = ladder_rows[k]
+            cap = min(MAX_Q_SPECTRA, len(lr))
+            if assign[k] == 1 and len(groups_all[k]) - len(lr) <= 0:
+                cap = min(cap, len(lr) - 1)     # class 1 must keep one spectrum in the reference
+            if cap >= 2:
+                query_rows[k] = lr[:cap]
+                continue
         if len(rows) == 0: continue
         cap = min(MAX_Q_SPECTRA, len(rows))
         if assign[k] == 1:
@@ -211,6 +258,20 @@ def main():
                          "outside the open ICEBERG weights BY CONSTRUCTION rather than by a 68% cull")
     ap.add_argument("--only-lib", default=None,
                     help="E34: draw query structures and their query spectra from this library only")
+    ap.add_argument("--only-keys", default=None,
+                    help="E64: draw query structures ONLY from the inchikey14 list in this json "
+                         "(a valset_*_queries.json). Lets a split be built from a query set that "
+                         "was selected elsewhere under controls the harness does not know about, "
+                         "such as the energy ladder.")
+    ap.add_argument("--tag", default=None, help="override the generated split tag")
+    ap.add_argument("--prefer-ladder", action="store_true",
+                    help="E65: choose query spectra that carry exactly one recorded collision "
+                         "energy, one per distinct energy, so the energy ladder survives the "
+                         "per-molecule cap on query spectra.")
+    ap.add_argument("--no-np-gate", action="store_true",
+                    help="E64: drop the >=1 NP-library-spectrum requirement on query structures. "
+                         "Needed for any energy-axis split: NP provenance and recorded collision "
+                         "energy are nearly disjoint in these libraries.")
     ap.add_argument("--legacy-inchikey", action="store_true",
                     help="pre-E17 behaviour: hold out by InChIKey14 only (reproduces old splits)")
     a = ap.parse_args()
@@ -226,6 +287,13 @@ def main():
         canon = train_canon(df)
         print(f"  twin-safe: {len(canon):,} structures, {len(set(canon.values())):,} scorer identities")
     only = coconut_keys() if a.np_coconut else None
+    if a.only_keys:
+        vs = json.load(open(a.only_keys))
+        want = set()
+        for v in vs["queries"].values(): want |= set(v)
+        only = want if only is None else (only & want)
+        print(f"  --only-keys: {len(want):,} structures requested, {len(only):,} after "
+              f"intersection with other query filters")
     if a.exclude_massspecgym:
         # scorer-key identity for the MassSpecGym side, InChIKey14 on ours: map through the same
         # canon the harness uses, so a tautomer twin of a MassSpecGym molecule is excluded too.
@@ -237,7 +305,8 @@ def main():
         only = keep if only is None else (only & keep)
         print(f"  excluding MassSpecGym: {len(drop):,} structures dropped, "
               f"{len(only):,} eligible remain")
-    assign, query_rows = build(df, a.n_query, a.seed, only, canon, a.only_lib)
+    assign, query_rows = build(df, a.n_query, a.seed, only, canon, a.only_lib,
+                               np_gate=not a.no_np_gate, prefer_ladder=a.prefer_ladder)
     ref_rows, cand, queries = apply_split(df, assign, query_rows, canon)
 
     counts = pd.Series([c for c in assign.values()]).value_counts().sort_index()
@@ -268,6 +337,7 @@ def main():
     tag = (f"{'np' if a.np_coconut else ''}{'xm' if a.exclude_massspecgym else ''}"
            f"{'' if canon is None else 'ts'}"
            f"{'tims' if a.only_lib == 'enveda-np-examples' else ''}seed{a.seed}_n{a.n_query}")
+    if a.tag: tag = a.tag
     c3 = {k for k, c in assign.items() if c == 3}
     db_exclude = sorted(expand(c3, canon) - c3)    # training-side twins of Class 3 answers
     with open(f"{OUT}/split_{tag}.json", "w") as fh:

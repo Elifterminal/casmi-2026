@@ -1,0 +1,24 @@
+E63b — attrition and confound audit for the bond-depth test
+
+WHERE THE QUERIES WENT (164 with predictions):
+   111  fewer than 2 usable observed energies
+    41  MEASURED
+     6  TRUTH NOT AMONG THE PREDICTED TOP-25
+     3  truth had <2 energies with predictions
+     3  fewer than 2 candidates measurable
+
+COVERAGE ASYMMETRY (the E48 failure mode, checked not assumed):
+  observed peaks the TRUTH explains, mean   9.9
+  observed peaks a DECOY explains, mean     5.5
+  truth explains MORE than the decoy in     68.0% of pairs
+  -> if this is far from 50%, the unpaired E63 statistic compared two different
+     subsets of the spectrum and its null is uninterpretable either way.
+
+PAIRED ON A COMMON PEAK SET (349 truth-decoy pairs, 27 queries):
+  truth slope steeper than decoy: 33.2% (95% CI 28.4%-38.4%)
+  truth shallower at lowest energy: 30.4%
+  mean shared peaks per pair: 6.5
+  NOTE: the CI here is over PAIRS, which are correlated within a query, so it is
+  optimistic. It bounds the effect's size, it does not license a significance claim.
+
+runtime 24s

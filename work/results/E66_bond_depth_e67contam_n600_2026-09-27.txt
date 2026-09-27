@@ -1,0 +1,38 @@
+E66 — implied break depth against the energy ladder, paired and powered
+
+61 measurable queries (E63 managed 28), 1,015 truth-decoy pairs
+
+     61  MEASURED
+     16  no pair shared 2 energies of peaks
+
+PAIRED ON A COMMON PEAK SET — share of same-mass rivals whose depth-vs-energy
+slope the truth beats (chance 0.500, CI bootstrapped over QUERIES):
+  0.537   95% CI 0.494 to 0.582
+  excludes chance: NO   |effect| 3.7 points (P2 wanted > 5)
+
+TRUTH SHALLOWER AT THE LOWEST ENERGY than the rival (chance 0.500):
+  0.522   95% CI 0.483 to 0.558
+
+AS AN ELIMINATOR (drop candidates whose implied depth FALLS as energy rises):
+  truths flagged 25.0% | decoys flagged 25.1%
+  -> decoys removed per truth lost: 1.00x  (P3 wanted > 1.30)
+
+mean shared peaks per pair: 5.1
+  class 1: n=17  paired win rate 0.530
+  class 2: n=44  paired win rate 0.540
+
+FOR CONTRAST, E63's unpaired statistic on this same data:
+  truth slope beats median decoy in 47.5% of 61 queries
+  (it compares depths computed over different peak subsets, so it is reported
+   only to show the size of the distortion, never as a result)
+
+SCOPE: candidates are the truth plus its 24 nearest-in-mass rivals from the
+mass-window pool, monomer adducts only -- dimer adducts ([2M+Na]+ and friends) are
+excluded because the neutral-mass arithmetic that builds the window assumes a monomer.
+This measures separation from same-mass rivals, NOT an MRR gain in the shipping ranker.
+
+ICEBERG's cosine on molecules outside its training is 0.147, so a null here is not yet
+a verdict on the chemistry -- the contaminated control separates 'no mechanism' from
+'the predictor cannot see it'.
+
+runtime 15s
