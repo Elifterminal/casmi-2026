@@ -1,0 +1,27 @@
+E71 — model class only: linear pairwise vs gradient-boosted trees, 7 features
+
+features: explain, chance_corr, single, nb_max, nb_mean10, spec_self, heavy
+
+arm                                  C1       C2       C3  weighted
+linear · as-protocol             0.8475   0.5260   0.0000    0.3723
+trees  · as-protocol             0.8502   0.5118   0.0000    0.3664
+linear · scaffold-disjoint       0.8584   0.5205   0.0000    0.3716
+trees  · scaffold-disjoint       0.8352   0.5145   0.0000    0.3652
+
+trees minus linear, as-protocol        -0.0058  95% CI [-0.0205, +0.0087]  does not clear zero
+trees minus linear, scaffold-disjoint  -0.0065  95% CI [-0.0214, +0.0086]  does not clear zero
+
+trees: as-protocol minus scaffold-disjoint +0.0011 [-0.0097, +0.0121]
+  This is the size of what scaffold overlap was worth to the trees. If it is large
+  and positive, every prior number fitted under the as-protocol rule is flattered,
+  the linear ranker's included.
+
+P1 wanted trees to beat linear by >= +0.010 in the scaffold-disjoint arm.
+P2 wanted the as-protocol gain to exceed the scaffold-disjoint gain.
+P3 wanted Class 2 to gain most.
+
+SCOPE: retrieval-only (generation is off on the board, E25), sqrt(p)/Fisher-Rao pools,
+the shipping ranker path for ties and dedup. Hyperparameters were fixed before the run
+and early stopping held out a scaffold-disjoint slice of TRAINING, never of eval.
+
+runtime 676s

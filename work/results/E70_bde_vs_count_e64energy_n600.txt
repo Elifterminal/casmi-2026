@@ -1,0 +1,22 @@
+E70 — pricing the broken bonds against counting them  (split e64energy_n600)
+
+quantity           arm         n              slope win           lower at low E
+count of bonds     real      191   0.471 [0.442,0.499]   0.574 [0.550,0.598]
+                   pseudo    170   0.525 [0.490,0.559]   0.512 [0.493,0.529]
+
+summed kJ/mol      real      191   0.462 [0.430,0.492]   0.605 [0.581,0.627]
+                   pseudo    170   0.520 [0.483,0.559]   0.516 [0.495,0.538]
+
+ring bonds         real      191   0.526 [0.497,0.556]   0.507 [0.483,0.530]
+                   pseudo    170   0.497 [0.464,0.530]   0.511 [0.495,0.528]
+
+PAIRED WITHIN QUERY, energy-sum minus count on the low-energy measure:
+  +0.0305  95% CI +0.0160 to +0.0448
+  pre-registered threshold was +0.02; MET
+
+If the energy sum does not beat the count, the reading is that the tabulated
+dissociation energies are too coarse to add information here -- they are averages over
+molecular contexts, and context is precisely what distinguishes two isomers. That is
+Lee's own argument applied to the lookup table rather than to the count.
+
+runtime 75s

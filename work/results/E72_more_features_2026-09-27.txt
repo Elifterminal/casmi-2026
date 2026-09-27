@@ -1,0 +1,44 @@
+E72 — 7 features against 22, both model classes
+
+added: ppm_err, ppm_abs, mw, rings, arom_rings, rot_bonds, tpsa, logp, frac_csp3, n_N, n_O, n_S, n_hal, hbd, hba
+
+arm                                            C1       C2       C3  weighted
+linear · 7 feats · as-protocol             0.8475   0.5260   0.0000    0.3723
+trees  · 7 feats · as-protocol             0.8779   0.5098   0.0000    0.3699
+linear · 7 feats · scaffold-disjoint       0.8584   0.5205   0.0000    0.3716
+trees  · 7 feats · scaffold-disjoint       0.8129   0.4975   0.0000    0.3539
+linear · 22 feats · as-protocol            0.8372   0.5221   0.0000    0.3689
+trees  · 22 feats · as-protocol            0.8705   0.5477   0.0000    0.3857
+linear · 22 feats · scaffold-disjoint      0.8436   0.5122   0.0000    0.3655
+trees  · 22 feats · scaffold-disjoint      0.8974   0.5178   0.0000    0.3766
+
+linear 22 feats minus 7 feats, as-protocol        -0.0035 [-0.0104, +0.0033]  does not clear zero
+trees  22 feats minus 7 feats, as-protocol        +0.0160 [+0.0051, +0.0272]  CLEARS ZERO
+trees minus linear at 22 feats, as-protocol     +0.0168 [+0.0026, +0.0313]  CLEARS ZERO
+linear 22 feats minus 7 feats, scaffold-disjoint  -0.0061 [-0.0135, +0.0013]  does not clear zero
+trees  22 feats minus 7 feats, scaffold-disjoint  +0.0226 [+0.0106, +0.0348]  CLEARS ZERO
+trees minus linear at 22 feats, scaffold-disjoint +0.0113 [-0.0024, +0.0252]  does not clear zero
+
+feature gain, trees at 21 features (scaffold-disjoint):
+  nb_max               89
+  mw                   59
+  nb_mean10            51
+  chance_corr          46
+  rings                42
+  single               41
+  n_N                  37
+  frac_csp3            36
+  tpsa                 35
+  spec_self            32
+  logp                 26
+  explain              23
+
+P1 wanted the larger feature set to win by >= +0.010 in the scaffold-disjoint arm.
+P2 wanted ppm_abs in the top five by gain.
+P3 wanted trees to beat linear once there are 21 features.
+
+DELIBERATELY EXCLUDED: spectra counts and library-membership counts. Our splits strip a
+Class 2/3 truth's spectra from the reference index, so such a feature reads zero for the
+answer and non-zero for many decoys -- the E48 artifact family. It needs its own control.
+
+runtime 761s
