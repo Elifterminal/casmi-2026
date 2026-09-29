@@ -1,0 +1,19 @@
+E75 — break-depth level on a SINGLE collision energy (slope dropped)
+
+196 queries measurable with >=1 energy (0 of them have exactly one)
+E70 required >=2 energies and measured 0.605 [0.581, 0.627] on 191 queries
+
+  truth lower implied bond energy at its LOWEST energy: 0.589 [0.569, 0.610]
+  a promoted decoy, same measure (label control):        0.497 [0.476, 0.518]
+  real minus control: +0.092
+
+IS IT SPECIFIC TO GENTLE ENERGY? rate at each observed collision energy:
+    20.0 eV   n= 114   0.585
+    40.0 eV   n= 184   0.625
+    60.0 eV   n= 179   0.586
+
+Reading it: a rate near E70's 0.605 means the two-energy requirement was an artifact of
+measuring the level alongside a slope that carried nothing -- and the feature then applies
+to ~100% of the test set rather than the 52.7% of the Class-2 arm that has two energies.
+
+runtime 76s

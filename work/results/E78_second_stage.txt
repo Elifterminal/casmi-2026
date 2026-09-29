@@ -1,0 +1,21 @@
+E78 — second-stage rerank of the fork's top 25, Class 2 arm
+
+83 queries, 5-fold scaffold-grouped cross-validation
+
+  fork's own order          0.5990
+  ceiling (truth in the 25) 0.9036   headroom +0.3046
+
+  blend: -rank - w*bde_rank    0.5990   vs fork +0.0000 [+0.0000, +0.0000]  does not clear zero
+     -> board equivalent +0.0000 [+0.0000, +0.0000]   (Class 2 is 45% of the score)
+     queries improved 0, worsened 0, unchanged 83
+  LambdaMART, 12 features      0.6053   vs fork +0.0063 [-0.0192, +0.0319]  does not clear zero
+     -> board equivalent +0.0028 [-0.0086, +0.0144]   (Class 2 is 45% of the score)
+     queries improved 12, worsened 9, unchanged 62
+
++0.02 board needs +0.044 of Class 2 MRR here.
+
+CAVEAT: 100 queries. The comparison is paired, which is the only reason an effect this
+size could be visible at all, and the interval is still wide. A result that clears zero
+here is a reason to build the board version, not a measurement of what it will score.
+
+runtime 68s
